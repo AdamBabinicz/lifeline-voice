@@ -384,7 +384,7 @@ export function EmergencyDashboard() {
         isListening={isListening}
       />
 
-      <main className="mx-auto flex max-w-7xl flex-col gap-4 sm:gap-6 px-3 sm:px-6 py-4 sm:py-8 pb-28 sm:pb-36 lg:px-8">
+      <main className="mx-auto flex max-w-7xl flex-col gap-4 sm:gap-6 px-3 sm:px-6 py-4 sm:py-8 pb-8 sm:pb-12 lg:px-8">
         {/* Główna sekcja z instrukcją */}
         <section className="relative overflow-hidden border border-border bg-card">
           <div className="absolute inset-y-0 left-0 w-1 bg-primary z-10" />
@@ -527,8 +527,8 @@ export function EmergencyDashboard() {
         </div>
       </main>
 
-      <footer className="border-t border-border bg-background pb-20 sm:pb-0">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 sm:py-8 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+      <footer className="border-t border-border bg-background pb-16 sm:pb-6">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <p className="max-w-xl leading-relaxed">{t.footer_note}</p>
           <nav className="flex gap-6 font-bold uppercase tracking-wider">
             <a className="hover:text-primary transition-colors" href="/privacy">
