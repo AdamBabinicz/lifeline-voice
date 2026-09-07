@@ -30,6 +30,12 @@ import plDict from "@/locales/pl.json";
 
 export type Locale = "pl" | "en";
 
+// Eksportujemy słowniki dla stron /privacy i /terms
+export const translations = {
+  pl: plDict,
+  en: enDict,
+};
+
 const protocols: Protocol[] = [
   {
     id: "cpr",
@@ -80,7 +86,6 @@ export function EmergencyDashboard() {
   const recognitionRef = useRef<any>(null);
   const wakeLockRef = useRef<any>(null);
 
-  // Inicjalizacja języka z pamięci podręcznej
   useEffect(() => {
     try {
       const stored = window.localStorage.getItem("first-aid-locale") as Locale;
@@ -99,7 +104,6 @@ export function EmergencyDashboard() {
 
   const isCprContext = selected === "cpr" || selected === null;
 
-  // Bezpieczeństwo medyczne: zatrzymaj metronom poza RKO
   useEffect(() => {
     if (!isCprContext && metronomeActive) {
       setMetronomeActive(false);
@@ -107,7 +111,6 @@ export function EmergencyDashboard() {
     }
   }, [selected, isCprContext, metronomeActive]);
 
-  // Metronom 110 BPM
   useEffect(() => {
     if (!metronomeActive || !isCprContext) {
       setBeat(false);
@@ -120,7 +123,6 @@ export function EmergencyDashboard() {
     return () => window.clearInterval(interval);
   }, [metronomeActive, isCprContext]);
 
-  // Mobilne zarządzanie Wake Lock z automatycznym wznawianiem (visibilitychange)
   useEffect(() => {
     if (!wakeLockActive || !("wakeLock" in navigator)) return;
 
@@ -151,7 +153,6 @@ export function EmergencyDashboard() {
     };
   }, [wakeLockActive]);
 
-  // Odtwarzanie mowy (z obsługą iOS i mobilnego doboru głosów)
   const speakResponse = useCallback(
     (text: string) => {
       if (typeof window === "undefined" || !("speechSynthesis" in window))
@@ -174,7 +175,6 @@ export function EmergencyDashboard() {
     [locale],
   );
 
-  // Odblokowanie uprawnień audio dla urządzeń iOS (Safari User-Gesture Requirement)
   const unlockAudioOnMobile = useCallback(() => {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
       const silent = new SpeechSynthesisUtterance("");
@@ -289,7 +289,6 @@ export function EmergencyDashboard() {
     [locale, toggleLocale, speakResponse, selectProtocol],
   );
 
-  // Mobilne rozpoznawanie mowy (z podziałem na Desktop / Mobile)
   const toggleListening = useCallback(() => {
     unlockAudioOnMobile();
 
@@ -315,8 +314,6 @@ export function EmergencyDashboard() {
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
     const recognition = new SR();
-    // Na telefonach: discrete single-window (brak zawieszania się systemu audio)
-    // Na desktopie: continuous listening
     recognition.continuous = !isMobile;
     recognition.interimResults = true;
     recognition.lang = locale === "pl" ? "pl-PL" : "en-US";
@@ -339,7 +336,6 @@ export function EmergencyDashboard() {
     };
 
     recognition.onerror = (event: any) => {
-      // Błędy 'no-speech' na mobile są normalne przy ciszy - resetujemy stan bez alarmowania
       if (event.error === "no-speech") {
         setIsListening(false);
       } else {
