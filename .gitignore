@@ -1,0 +1,25 @@
+# Folder z Twoimi notatkami/materiałami pomocniczymi
+pliki/
+
+# Środowisko i zmienne (BARDZO WAŻNE: nie wysyłaj klucza Groq do sieci!)
+.env*.local
+.env
+
+# Standardowe foldery Next.js i paczek
+node_modules
+.next/
+out/
+build/
+
+# Pliki systemowe
+.DS_Store
+Thumbs.db
+
+# Pliki logów i debugowania
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Konfiguracja Vercel (opcjonalnie, jeśli nie używasz)
+.vercel
