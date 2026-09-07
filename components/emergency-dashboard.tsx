@@ -30,7 +30,6 @@ import plDict from "@/locales/pl.json";
 
 export type Locale = "pl" | "en";
 
-// Eksportujemy słowniki dla stron /privacy i /terms
 export const translations = {
   pl: plDict,
   en: enDict,
@@ -370,7 +369,11 @@ export function EmergencyDashboard() {
 
   return (
     <div
-      className={`min-h-screen bg-background text-foreground transition-colors duration-300 ${isCprContext && metronomeActive && beat ? "ring-inset ring-[12px] ring-primary/20" : ""}`}
+      className={`min-h-screen bg-background text-foreground transition-colors duration-300 ${
+        isCprContext && metronomeActive && beat
+          ? "ring-inset ring-[8px] sm:ring-[12px] ring-primary/20"
+          : ""
+      }`}
     >
       <StatusHeader
         t={t}
@@ -381,7 +384,8 @@ export function EmergencyDashboard() {
         isListening={isListening}
       />
 
-      <main className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 pb-40 sm:px-6 sm:py-8 lg:px-8">
+      <main className="mx-auto flex max-w-7xl flex-col gap-4 sm:gap-6 px-3 sm:px-6 py-4 sm:py-8 pb-28 sm:pb-36 lg:px-8">
+        {/* Główna sekcja z instrukcją */}
         <section className="relative overflow-hidden border border-border bg-card">
           <div className="absolute inset-y-0 left-0 w-1 bg-primary z-10" />
 
@@ -391,11 +395,11 @@ export function EmergencyDashboard() {
             locale={locale}
           />
 
-          <div className="p-6 sm:p-10 lg:p-12">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="p-4 sm:p-8 lg:p-12">
+            <div className="flex flex-col gap-4 sm:gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-4xl">
-                <div className="mb-3 flex items-center gap-3">
-                  <p className="font-mono text-xs font-bold tracking-[0.2em] text-primary uppercase">
+                <div className="mb-2 sm:mb-3 flex flex-wrap items-center gap-2 sm:gap-3">
+                  <p className="font-mono text-[10px] sm:text-xs font-bold tracking-[0.15em] sm:tracking-[0.2em] text-primary uppercase">
                     {isThinking
                       ? t.status_thinking
                       : aiGuidance
@@ -408,19 +412,19 @@ export function EmergencyDashboard() {
                     <button
                       onClick={() => speakResponse(currentInstruction)}
                       title={t.repeat_voice}
-                      className="inline-flex items-center gap-1.5 font-mono text-xs text-muted-foreground hover:text-primary transition-colors uppercase font-bold"
+                      className="inline-flex items-center gap-1 font-mono text-[10px] sm:text-xs text-muted-foreground hover:text-primary transition-colors uppercase font-bold"
                     >
-                      <Volume2 className="size-3.5 text-primary" />
+                      <Volume2 className="size-3 sm:size-3.5 text-primary" />
                       {t.repeat_voice}
                     </button>
                   )}
                 </div>
 
                 <h1
-                  className={`text-balance font-extrabold tracking-tight ${
+                  className={`font-extrabold tracking-tight break-words ${
                     aiGuidance
-                      ? "text-2xl sm:text-3xl lg:text-4xl leading-snug normal-case text-foreground/95"
-                      : "text-3xl sm:text-5xl lg:text-6xl leading-[1.05] uppercase"
+                      ? "text-lg sm:text-3xl lg:text-4xl leading-snug normal-case text-foreground/95"
+                      : "text-2xl sm:text-4xl lg:text-6xl leading-[1.1] sm:leading-[1.05] uppercase"
                   }`}
                 >
                   {currentInstruction}
@@ -428,7 +432,7 @@ export function EmergencyDashboard() {
               </div>
 
               {activeProtocol && !aiGuidance && (
-                <div className="shrink-0 font-mono text-sm font-bold tracking-wider text-muted-foreground uppercase border-l pl-4 border-border hidden lg:block">
+                <div className="shrink-0 font-mono text-xs sm:text-sm font-bold tracking-wider text-muted-foreground uppercase border-l pl-3 sm:pl-4 border-border hidden lg:block">
                   {t[activeProtocol.protocol as keyof typeof t]}
                 </div>
               )}
@@ -436,7 +440,8 @@ export function EmergencyDashboard() {
           </div>
         </section>
 
-        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Kafelki protokołów */}
+        <section className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
           {protocols.map((p) => (
             <ProtocolCard
               key={p.id}
@@ -448,7 +453,8 @@ export function EmergencyDashboard() {
           ))}
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-[1fr_2fr]">
+        {/* Metronom + Moduł Voice Command */}
+        <section className="grid gap-4 sm:gap-6 lg:grid-cols-[1fr_2fr]">
           {isCprContext ? (
             <Metronome
               active={metronomeActive}
@@ -457,13 +463,13 @@ export function EmergencyDashboard() {
               onToggle={() => setMetronomeActive(!metronomeActive)}
             />
           ) : (
-            <div className="flex flex-col justify-between border border-border bg-muted/10 p-6 sm:p-8 opacity-60">
+            <div className="flex flex-col justify-between border border-border bg-muted/10 p-4 sm:p-8 opacity-60">
               <div>
-                <div className="flex items-center gap-2 font-mono text-xs font-bold tracking-widest text-muted-foreground uppercase">
-                  <ShieldAlert className="size-4 text-muted-foreground" />
-                  {t.metronome_paused_title}
+                <div className="flex items-center gap-2 font-mono text-[11px] sm:text-xs font-bold tracking-widest text-muted-foreground uppercase">
+                  <ShieldAlert className="size-4 shrink-0 text-muted-foreground" />
+                  <span>{t.metronome_paused_title}</span>
                 </div>
-                <p className="mt-4 text-xs font-medium leading-relaxed text-muted-foreground">
+                <p className="mt-3 text-xs font-medium leading-relaxed text-muted-foreground">
                   {t.metronome_cpr_only_desc}
                 </p>
               </div>
@@ -471,39 +477,49 @@ export function EmergencyDashboard() {
                 variant="outline"
                 size="sm"
                 onClick={() => selectProtocol("cpr")}
-                className="mt-6 rounded-none font-mono text-xs font-bold uppercase tracking-wider"
+                className="mt-4 rounded-none font-mono text-xs font-bold uppercase tracking-wider"
               >
                 {t.switch_to_cpr}
               </Button>
             </div>
           )}
 
-          <div className="flex min-h-48 flex-col justify-between gap-6 border border-border bg-muted/20 p-6 sm:p-8 relative">
-            <div className="flex items-center gap-3 font-mono text-xs font-bold tracking-[0.2em] text-muted-foreground uppercase">
-              <AlertTriangle className="size-4 text-primary" />
-              {transcript || t.voice_hint}
+          <div className="flex flex-col justify-between gap-4 sm:gap-6 border border-border bg-muted/20 p-4 sm:p-8 relative">
+            <div className="flex items-center gap-2 font-mono text-[10px] sm:text-xs font-bold tracking-[0.1em] sm:tracking-[0.2em] text-muted-foreground uppercase">
+              <AlertTriangle className="size-3.5 sm:size-4 shrink-0 text-primary" />
+              <span className="truncate">{transcript || t.voice_hint}</span>
             </div>
 
-            <VoiceVisualizer active={isListening || isThinking} />
+            <div className="py-2">
+              <VoiceVisualizer active={isListening || isThinking} />
+            </div>
 
             <Button
               onClick={toggleListening}
-              size="lg"
-              className={`touch-action-manipulation h-20 rounded-none font-mono font-black tracking-widest text-lg ${isListening ? "bg-destructive hover:bg-destructive shadow-[0_0_20px_rgba(255,0,0,0.4)]" : ""}`}
+              className={`h-14 sm:h-20 w-full rounded-none font-mono font-black tracking-wider sm:tracking-widest text-sm sm:text-base md:text-lg flex items-center justify-center text-center px-4 ${
+                isListening
+                  ? "bg-destructive hover:bg-destructive shadow-[0_0_20px_rgba(255,0,0,0.4)]"
+                  : ""
+              }`}
             >
               <Mic
-                className={`mr-3 size-6 ${isListening ? "animate-pulse" : ""}`}
+                className={`mr-2 sm:mr-3 size-5 sm:size-6 shrink-0 ${
+                  isListening ? "animate-pulse" : ""
+                }`}
               />
-              {isListening ? t.status_listening : t.btn_voice_start}
+              <span className="truncate">
+                {isListening ? t.status_listening : t.btn_voice_start}
+              </span>
             </Button>
           </div>
         </section>
 
+        {/* Wake Lock Button */}
         <div className="flex flex-wrap gap-4">
           <Button
             variant="outline"
             onClick={() => setWakeLockActive(!wakeLockActive)}
-            className="touch-action-manipulation rounded-none font-mono font-bold"
+            className="rounded-none font-mono text-xs sm:text-sm font-bold"
           >
             <ShieldCheck className="mr-2 size-4 text-primary" />
             {wakeLockActive ? t.wake_lock_on : t.wake_lock}
@@ -512,7 +528,7 @@ export function EmergencyDashboard() {
       </main>
 
       <footer className="border-t border-border bg-background pb-20 sm:pb-0">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 sm:py-8 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <p className="max-w-xl leading-relaxed">{t.footer_note}</p>
           <nav className="flex gap-6 font-bold uppercase tracking-wider">
             <a className="hover:text-primary transition-colors" href="/privacy">
@@ -525,26 +541,21 @@ export function EmergencyDashboard() {
         </div>
       </footer>
 
+      {/* Pływający przycisk 112 */}
       <a
         href="tel:112"
-        className="touch-action-manipulation fixed bottom-5 right-5 z-[100] flex items-center gap-4 bg-primary px-6 py-5 text-primary-foreground shadow-2xl transition-transform hover:scale-105 active:scale-95 sm:bottom-8 sm:right-8"
+        className="fixed bottom-3 right-3 sm:bottom-6 sm:right-6 z-[100] flex items-center gap-2.5 sm:gap-4 bg-primary px-4 py-3 sm:px-6 sm:py-4 text-primary-foreground shadow-2xl transition-transform hover:scale-105 active:scale-95"
       >
-        <PhoneCall className="size-7 animate-bounce" />
+        <PhoneCall className="size-5 sm:size-7 animate-bounce shrink-0" />
         <span>
-          <span className="block font-mono text-2xl font-black leading-none sm:text-3xl">
+          <span className="block font-mono text-xl sm:text-3xl font-black leading-none">
             {t.emergency_call}
           </span>
-          <span className="mt-1 block text-[10px] font-bold uppercase tracking-widest opacity-90">
+          <span className="mt-0.5 sm:mt-1 block text-[9px] sm:text-[10px] font-bold uppercase tracking-widest opacity-90">
             {t.emergency_call_subtitle}
           </span>
         </span>
       </a>
-
-      <style jsx global>{`
-        .touch-action-manipulation {
-          touch-action: manipulation;
-        }
-      `}</style>
     </div>
   );
 }

@@ -178,3 +178,17 @@
     overflow-wrap: anywhere;
   }
 }
+@layer utilities {
+  /* Zapobiega pionowemu łamaniu napisów statusu w nagłówku na mobile */
+  header .status-container,
+  header [role="banner"] {
+    white-space: nowrap;
+  }
+
+  /* Zapewnia, że kafelki protokołów nie ucinają tekstu na smartfonach */
+  .protocol-card,
+  button[role="button"] {
+    min-height: auto;
+    overflow: visible;
+  }
+}
