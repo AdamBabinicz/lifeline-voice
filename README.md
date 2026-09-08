@@ -4,6 +4,8 @@
 
 Built for the **AI Builders Hackathon: Solving the Paradox of Intelligence Systems — The Limits of Foundation Models**.
 
+> ⚠️ **Safety notice:** LifeLine Voice is a hackathon prototype and does **not** replace emergency dispatchers, certified first-aid guidance, or professional medical care. In a real emergency, always call your local emergency number (112 in the EU) first.
+
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Next.js 15](https://img.shields.io/badge/Next.js-15-black?logo=nextdotjs&logoColor=white)
 ![Groq](https://img.shields.io/badge/Groq-Llama%203.1-orange)
@@ -21,6 +23,7 @@ Built for the **AI Builders Hackathon: Solving the Paradox of Intelligence Syste
 
 - [The Core Paradox](#the-core-paradox-the-limits-of-foundation-models)
 - [The Solution](#the-solution-system-architecture-over-raw-intelligence)
+- [Safety Architecture](#safety-architecture)
 - [Adaptive Mobile-First Architecture](#adaptive-mobile-first-architecture)
 - [Key Features](#key-features)
 - [Tech Stack](#tech-stack)
@@ -59,8 +62,8 @@ State-of-the-art Foundation Models (LLMs) possess vast medical intelligence, yet
 │  • Arterial Bleeding         │  • "Diabetic shock"          │
 ├──────────────────────────────┼──────────────────────────────┤
 │  Local Deterministic         │  Secure Server-Side Proxy    │
-│  Rescue Protocol (0 ms)      │  Next.js Route Handler proxy │
-│                              │  Expert Prompting · 3 snt.   │
+│  Rescue Protocol (no network)│  Next.js Route Handler proxy │
+│                              │  Prompt Guardrails · 3 snt.  │
 │                              │  jewelry · ice · no vomiting │
 └──────────────┴──────────────────────────────┴───────────────┘
                │                              │                
@@ -76,6 +79,17 @@ State-of-the-art Foundation Models (LLMs) possess vast medical intelligence, yet
 └─────────────────────────────────────────────────────────────┘
 ```
 
+## 🛡️ Safety Architecture
+
+LifeLine Voice is designed as a **safety-first system**: the generative model is only one component, and every failure path has a designed response.
+
+- **Emergency escalation first** — a persistent one-tap bridge to the 112 emergency number is always available, and every protocol and AI answer reinforces calling emergency services.
+- **Deterministic routing for critical scenarios** — life-threatening protocols (CPR, choking, severe bleeding, unconsciousness) never depend on LLM generation; they are locally hardcoded and activate with no network round-trip.
+- **Context locking** — the 110 BPM metronome is locked to the CPR context only and pauses automatically in other scenarios to prevent dangerous chest compressions on conscious patients.
+- **Bounded AI responses** — the AI layer is constrained by explicit system-prompt guardrails: answers in at most 3 sentences, immediate action first, no diagnosing, no inventing procedures, no background chatter.
+- **Graceful failure fallback** — API errors (Model-Not-Found 404, overload 429) and missing connectivity are handled by falling back to the local deterministic protocols — the system never blocks a rescuer mid-rescue.
+- **Prototype disclaimer** — the app is a hackathon prototype, not a certified medical device (see the safety notice above and the disclaimer below).
+
 ## 📱 Adaptive Mobile-First Architecture
 
 Mobile operating systems enforce strict sandbox and power-saving policies that break standard browser AI workflows. LifeLine Voice incorporates dedicated mobile-hardened countermeasures:
@@ -85,7 +99,7 @@ Mobile operating systems enforce strict sandbox and power-saving policies that b
 | Continuous Listening      | Mobile OS forcibly kills the microphone after 3–5 s of silence (no-speech / aborted crash). | Discrete adaptive windows: desktop runs continuous listening; mobile switches to single-utterance windows with silent error reset.  |
 | iOS Audio Autoplay Policy | Safari blocks `speechSynthesis` when triggered asynchronously by an AI API response.        | User-gesture audio unlock: the first tap triggers a silent synthetic utterance, priming the iOS audio engine for hands-free speech. |
 | Mobile Screen Timeout     | Phones dim and sleep after ~30 s of inactivity, locking the rescuer out during CPR.         | Auto-resuming Screen Wake Lock: a `visibilitychange` listener re-acquires the screen lock whenever the app regains focus.           |
-| 300 ms Tap Latency        | Mobile browsers delay touch events to detect double taps.                                   | `touch-action: manipulation` enforced globally on all emergency controls for true 0 ms touch response.                              |
+| 300 ms Tap Latency        | Mobile browsers delay touch events to detect double taps.                                   | `touch-action: manipulation` enforced globally on all emergency controls for immediate, tap-delay-free touch response.              |
 
 ## 🚀 Key Features
 
@@ -97,16 +111,16 @@ The rescuer taps once, sets the phone beside the victim, and issues voice comman
 
 ### ⚡ Zero-Latency Deterministic Fallback vs. Dynamic AI Guidance
 
-- **Deterministic Local Path (0 ms)** — Core life-threatening emergencies (CPR, choking, severe bleeding, unconsciousness) trigger visual and auditory action protocols instantly, without waiting for network calls.
-- **Dynamic AI Reasoning (Secure Server-Side Proxy)** — Complex, open-ended queries (e.g., _"Patient has a nosebleed, what should I do?"_) are routed through a secure Next.js Route Handler: the Groq API key never leaves the server (zero browser exposure), only the final answer returns. The endpoint strips thinking tokens and applies **expert-level prompting** that surfaces non-obvious, actionable steps in at most 3 sentences — e.g., *slide off rings before swelling locks them on*, *cool the burn with running water*, *never induce vomiting* after corrosive ingestion.
+- **Deterministic Local Path (no network round-trip)** — Core life-threatening emergencies (CPR, choking, severe bleeding, unconsciousness) trigger visual and auditory action protocols immediately, without waiting for any network call.
+- **Dynamic AI Reasoning (Secure Server-Side Proxy)** — Complex, open-ended queries (e.g., _"Patient has a nosebleed, what should I do?"_) are routed through a secure Next.js Route Handler: the Groq API key never leaves the server (zero browser exposure), only the final answer returns. The endpoint strips thinking tokens and applies a **constrained emergency system prompt** with explicit guardrails — answers in at most 3 sentences, immediate action first, no diagnosing, no inventing procedures — while surfacing non-obvious, actionable steps: *slide off rings before swelling locks them on*, *cool the burn with running water*, *never induce vomiting* after corrosive ingestion.
 
 ### 🔒 Secure Server-Side AI Proxy (Route Handler)
 
 All AI requests are routed through a secure Next.js Route Handler — never a direct browser-to-Groq call.
 
 - **Security**: API keys are protected server-side (no exposure to Client/Browser).
-- **Stability**: Automatically handles Model-Not-Found (404) and API-Overload (429) errors with zero-crash fallback.
-- **Speed**: Direct server-to-server connection with Groq Cloud for sub-second responses.
+- **Stability**: Automatically handles Model-Not-Found (404) and API-Overload (429) errors with graceful fallback to the local deterministic protocols.
+- **Speed**: Direct server-to-server connection with Groq Cloud for low-latency responses.
 
 ### 💓 110 BPM Sensory Metronome with Context Lock
 
@@ -129,7 +143,7 @@ One-tap toggle between Polish and English locales; voice synthesis switches betw
 | Framework          | Next.js 15 (App Router, React Hooks, Turbopack)                   |
 | Architecture       | Secure Server-Side Route Handler Proxy (API keys never reach the browser) |
 | AI Inference       | Groq Cloud API (`llama-3.1-8b-instant`) — accessed only via the Secure Route Handler |
-| Prompting          | Expert-level system prompt: non-obvious steps (jewelry, ice, no vomiting), max 3 sentences |
+| Prompting          | Constrained emergency system prompt: non-obvious steps (jewelry, ice, no vomiting), max 3 sentences |
 | Speech Processing  | Web Speech API (`SpeechRecognition` & `speechSynthesis`)          |
 | Hardware Telemetry | Screen Wake Lock API, `visibilitychange` auto-recovery            |
 | Styling & UI       | Tailwind CSS, Lucide React, high-contrast emergency design system |
@@ -176,11 +190,11 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 | Judging Criteria               | How LifeLine Voice Solves It                                                                                                        |
 | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Solving the Paradox (20%)      | Turns raw, chatty LLMs into a real-time deterministic rescue system: expert-level advice (jewelry, ice, no vomiting) instead of trivial chatter, with zero latency. |
+| Solving the Paradox (20%)      | Turns raw, chatty LLMs into a real-time deterministic rescue system: expert-level advice (jewelry, ice, no vomiting) instead of trivial chatter, activated without any network round-trip. |
 | Technical Implementation (20%) | Clean hybrid architecture: Web Speech STT/TTS + secure server-side Groq proxy (Route Handler) + auto-resuming Mobile Wake Lock + context-locked metronome. |
-| Innovation & Creativity (20%)  | Moves away from generic chatbots toward hands-free sensory dispatch — plus expert prompting that teaches non-obvious survival steps.  |
+| Innovation & Creativity (20%)  | Moves away from generic chatbots toward hands-free sensory dispatch — plus a constrained emergency prompt that teaches non-obvious survival steps.  |
 | Design & UX (20%)              | High-contrast Swiss-Brutalist emergency typography designed for legibility during adrenaline-fueled panic.                          |
-| Completeness & Polish (20%)    | Mobile-hardened (iOS/Android audio unlocking, error recovery), bilingual (PL/EN), zero-crash fallbacks, API keys secured server-side. |
+| Completeness & Polish (20%)    | Mobile-hardened (iOS/Android audio unlocking, error recovery), bilingual (PL/EN), graceful error fallbacks, API keys secured server-side. |
 
 ## 📜 License
 
