@@ -119,7 +119,6 @@
   transform-origin: center;
 }
 
-/* Skalowanie wysokości fal pod mniejsze ekrany mobilne */
 .wave-bar-0 {
   height: clamp(1rem, 3vh, 1.5rem);
   animation-delay: 0ms;
@@ -165,7 +164,7 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground; /* To zapewnia, że body zawsze ma właściwe tło */
     max-width: 100vw;
     min-height: 100dvh;
     overflow-x: hidden;
@@ -178,13 +177,11 @@
   }
 }
 @layer utilities {
-  /* Zapobiega pionowemu łamaniu napisów statusu w nagłówku na mobile */
   header .status-container,
   header [role="banner"] {
     white-space: nowrap;
   }
 
-  /* Zapewnia, że kafelki protokołów nie ucinają tekstu na smartfonach */
   .protocol-card,
   button[role="button"] {
     min-height: auto;

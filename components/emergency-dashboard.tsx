@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
-import { getEmergencyGuidance } from "@/lib/ai-service";
 import {
   StatusHeader,
   ProtocolCard,
@@ -34,6 +33,36 @@ export const translations = {
   pl: plDict,
   en: enDict,
 };
+
+type EmergencyGuidanceResponse = {
+  ok: boolean;
+  guidance?: string;
+  error?: string;
+  message?: string;
+};
+
+async function requestEmergencyGuidance(
+  query: string,
+  locale: Locale,
+): Promise<string | null> {
+  const response = await fetch("/api/guidance", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ query, locale }),
+  });
+
+  const data = (await response
+    .json()
+    .catch(() => null)) as EmergencyGuidanceResponse | null;
+
+  if (!response.ok || !data?.ok || !data.guidance) {
+    return null;
+  }
+
+  return data.guidance;
+}
 
 const protocols: Protocol[] = [
   {
@@ -69,7 +98,7 @@ const protocols: Protocol[] = [
 export function EmergencyDashboard() {
   const [locale, setLocale] = useState<Locale>("pl");
   const [mounted, setMounted] = useState(false);
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
 
   const t = locale === "en" ? enDict : plDict;
 
@@ -238,51 +267,61 @@ export function EmergencyDashboard() {
         return;
       }
 
-      const isComplexQuery = words.length > 2;
+      const isComplexQuery = words.length >= 3;
+      let aiSuccess = false;
 
       if (isComplexQuery) {
         setIsThinking(true);
+        setAiGuidance(null);
+        setSelected(null);
         try {
-          const guidance = await getEmergencyGuidance(cleanText, locale);
+          const guidance = await requestEmergencyGuidance(cleanText, locale);
           if (guidance) {
             setAiGuidance(guidance);
             speakResponse(guidance);
-
-            const lowerGuidance = guidance.toLowerCase();
-            if (
-              lowerGuidance.includes("uciskaj") ||
-              lowerGuidance.includes("rko") ||
-              lowerGuidance.includes("masaż") ||
-              lowerGuidance.includes("compress") ||
-              lowerGuidance.includes("cpr")
-            ) {
-              setSelected("cpr");
-            }
+            aiSuccess = true;
           }
-        } catch {
-          // ignore
+        } catch (err) {
+          console.error("AI Guidance failure:", err);
         } finally {
           setIsThinking(false);
         }
-        return;
+        if (aiSuccess) return;
       }
 
       if (
         cmd.includes("rko") ||
         cmd.includes("cpr") ||
-        cmd.includes("reanimacj")
+        cmd.includes("reanimacj") ||
+        cmd.includes("masaż")
       ) {
         selectProtocol("cpr");
-      } else if (cmd.includes("zadławienie") || cmd.includes("choking")) {
+      } else if (
+        cmd.includes("zadławienie") ||
+        cmd.includes("choking") ||
+        cmd.includes("krztusi")
+      ) {
         selectProtocol("choking");
       } else if (
-        cmd.includes("krwawienie") ||
+        cmd.includes("krwawi") ||
         cmd.includes("krwotok") ||
-        cmd.includes("bleeding")
+        cmd.includes("bleeding") ||
+        cmd.includes("krew")
       ) {
         selectProtocol("bleeding");
-      } else if (cmd.includes("nieprzytomny") || cmd.includes("unconscious")) {
+      } else if (
+        cmd.includes("nieprzytomny") ||
+        cmd.includes("unconscious") ||
+        cmd.includes("oddech")
+      ) {
         selectProtocol("unconscious");
+      } else if (isComplexQuery && !aiSuccess) {
+        const msg =
+          locale === "pl"
+            ? "Nie udało się uzyskać porady AI. Wezwij 112."
+            : "Could not get AI advice. Call 112.";
+        setAiGuidance(msg);
+        speakResponse(msg);
       }
     },
     [locale, toggleLocale, speakResponse, selectProtocol],
@@ -320,6 +359,7 @@ export function EmergencyDashboard() {
     recognition.onstart = () => {
       setIsListening(true);
       setAiGuidance(null);
+      setTranscript("");
     };
 
     recognition.onresult = (e: any) => {
@@ -378,14 +418,13 @@ export function EmergencyDashboard() {
       <StatusHeader
         t={t}
         locale={locale}
-        theme={theme}
+        theme={resolvedTheme}
         onLocale={toggleLocale}
-        onTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
+        onTheme={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
         isListening={isListening}
       />
 
       <main className="mx-auto flex max-w-7xl flex-col gap-4 sm:gap-6 px-3 sm:px-6 py-4 sm:py-8 pb-8 sm:pb-12 lg:px-8">
-        {/* Główna sekcja z instrukcją */}
         <section className="relative overflow-hidden border border-border bg-card">
           <div className="absolute inset-y-0 left-0 w-1 bg-primary z-10" />
 
@@ -422,7 +461,7 @@ export function EmergencyDashboard() {
 
                 <h1
                   className={`font-extrabold tracking-tight break-words ${
-                    aiGuidance
+                    aiGuidance || isThinking
                       ? "text-lg sm:text-3xl lg:text-4xl leading-snug normal-case text-foreground/95"
                       : "text-2xl sm:text-4xl lg:text-6xl leading-[1.1] sm:leading-[1.05] uppercase"
                   }`}
@@ -440,7 +479,6 @@ export function EmergencyDashboard() {
           </div>
         </section>
 
-        {/* Kafelki protokołów */}
         <section className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
           {protocols.map((p) => (
             <ProtocolCard
@@ -453,7 +491,6 @@ export function EmergencyDashboard() {
           ))}
         </section>
 
-        {/* Metronom + Moduł Voice Command */}
         <section className="grid gap-4 sm:gap-6 lg:grid-cols-[1fr_2fr]">
           {isCprContext ? (
             <Metronome
@@ -514,7 +551,6 @@ export function EmergencyDashboard() {
           </div>
         </section>
 
-        {/* Wake Lock Button */}
         <div className="flex flex-wrap gap-4">
           <Button
             variant="outline"
@@ -541,7 +577,6 @@ export function EmergencyDashboard() {
         </div>
       </footer>
 
-      {/* Pływający przycisk 112 */}
       <a
         href="tel:112"
         className="fixed bottom-3 right-3 sm:bottom-6 sm:right-6 z-[100] flex items-center gap-2.5 sm:gap-4 bg-primary px-4 py-3 sm:px-6 sm:py-4 text-primary-foreground shadow-2xl transition-transform hover:scale-105 active:scale-95"

@@ -1,59 +1,66 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: Request) {
+import { getEmergencyGuidance } from "@/lib/ai-service";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+type Locale = "pl" | "en";
+
+export async function POST(request: NextRequest) {
   try {
-    const { query, locale } = await req.json();
+    const body = (await request.json().catch(() => null)) as {
+      query?: string;
+      locale?: Locale;
+    } | null;
 
-    const apiKey =
-      process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY;
-    if (!apiKey) {
+    const query = body?.query?.trim();
+    const locale: Locale = body?.locale === "en" ? "en" : "pl";
+
+    if (!query) {
       return NextResponse.json(
-        { error: "Brak klucza GROQ_API_KEY w .env.local" },
-        { status: 500 },
-      );
-    }
-
-    const systemPrompt =
-      locale === "pl"
-        ? "Jesteś dyspozytorem medycznym pierwszej pomocy. Odpowiedz maksymalnie w 2 krótkich, prostych zdaniach. Skup się wyłącznie na natychmiastowym ratowaniu życia. Jeśli sytuacja jest krytyczna, przypomnij o 112."
-        : "You are an emergency medical dispatcher. Respond in max 2 short, simple sentences. Focus solely on immediate life-saving actions. If critical, remind to call 112.";
-
-    // Oficjalny, stabilny endpoint i model produkcyjny Groq
-    const groqRes = await fetch(
-      "https://api.groq.com/openai/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey.trim()}`,
-          "Content-Type": "application/json",
+        {
+          ok: false,
+          error: "EMPTY_QUERY",
+          message:
+            locale === "pl"
+              ? "Brak treści zapytania."
+              : "Missing query text.",
         },
-        body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: query },
-          ],
-          temperature: 0.2,
-          max_tokens: 100,
-        }),
-      },
-    );
-
-    if (!groqRes.ok) {
-      const errText = await groqRes.text();
-      console.error("Groq Server Error:", errText);
-      return NextResponse.json(
-        { error: "Groq error" },
-        { status: groqRes.status },
+        { status: 400 },
       );
     }
 
-    const data = await groqRes.json();
-    const answer = data.choices?.[0]?.message?.content?.trim() || null;
+    const guidance = await getEmergencyGuidance(query, locale);
 
-    return NextResponse.json({ answer });
+    if (!guidance) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "AI_UNAVAILABLE",
+          message:
+            locale === "pl"
+              ? "Usługa AI jest chwilowo niedostępna."
+              : "AI service is temporarily unavailable.",
+        },
+        { status: 503 },
+      );
+    }
+
+    return NextResponse.json({
+      ok: true,
+      guidance,
+    });
   } catch (error) {
-    console.error("Route error:", error);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    console.error("Emergency guidance route failed:", error);
+
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "INTERNAL_ERROR",
+        message: "Request failed.",
+      },
+      { status: 500 },
+    );
   }
 }

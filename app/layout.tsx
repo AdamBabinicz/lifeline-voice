@@ -25,15 +25,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pl" className="bg-background" suppressHydrationWarning>
-      <body className="antialiased" suppressHydrationWarning>
+    <html lang="pl" suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          {/* Jeden, nadrzędny LanguageProvider dla całej aplikacji */}
           <LanguageProvider>{children}</LanguageProvider>
         </ThemeProvider>
       </body>

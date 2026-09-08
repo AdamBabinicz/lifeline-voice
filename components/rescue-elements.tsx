@@ -219,10 +219,12 @@ export function ProtocolCard({ protocol, selected, label, onSelect }: any) {
   return (
     <Button
       onClick={onSelect}
-      variant="outline"
+      // KLUCZOWA POPRAWKA: Dynamiczny wariant przycisku
+      // variant="default" dla wybranego wymusza bg-primary i biały tekst w Dark Mode
+      variant={selected ? "default" : "outline"}
       className={`h-auto min-h-[6.5rem] sm:min-h-[10rem] w-full justify-between items-start rounded-none border-2 p-3 sm:p-5 text-left font-mono transition-all ${
         selected
-          ? "border-primary bg-primary text-primary-foreground hover:bg-primary/90"
+          ? "border-primary shadow-[0_0_15px_rgba(255,0,0,0.3)]"
           : "border-border bg-card hover:border-primary"
       }`}
     >

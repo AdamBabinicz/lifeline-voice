@@ -29,56 +29,57 @@ Built for the **AI Builders Hackathon: Solving the Paradox of Intelligence Syste
 State-of-the-art Foundation Models (LLMs) possess vast medical intelligence, yet in life-or-death physical emergencies, **raw Foundation Models completely fail**:
 
 1. **The Latency Trap (Seconds Kill)** — In Sudden Cardiac Arrest (SCA), irreversible brain damage begins within 3–4 minutes. Standard LLM pipelines that deliberate, generate chain-of-thought (`thinking`) tokens, or take 4–8 seconds to respond are dangerously slow.
-2. **The "Disembodied Mind" Problem** — A raw text model can state *"compress the chest at 100–120 beats per minute"*, but in a panic, humans cannot maintain accurate auditory-motor rhythm without sensory hardware telemetry.
+2. **The "Disembodied Mind" Problem** — A raw text model can state _"compress the chest at 100–120 beats per minute"_, but in a panic, humans cannot maintain accurate auditory-motor rhythm without sensory hardware telemetry.
 3. **The Mobile & Physical Barrier** — Rescuers have their hands covered in fluids or occupied performing CPR. Chatboxes, typing on touchscreens, and phones dimming or locking during rescue make standard AI models unusable.
-4. **Chattiness & Hallucination Risk** — Raw models tend to be conversational, offering disclaimers, pleasantries, or verbose medical background when immediate, imperative commands dictate survival.
+4. **Chattiness & "Obvious" Advice** — Raw models tend to be conversational or offer trivial background when immediate, imperative commands and non-obvious expert steps (e.g., removing jewelry before swelling) dictate survival.
 
 ## 💡 The Solution: System Architecture Over Raw Intelligence
 
 **LifeLine Voice** resolves the Foundation Model Paradox by wrapping ultra-fast inference into a **deterministic, multimodal emergency operating layer**:
 
 ```text
-┌───────────────────────────────────────────────────────────┐
-│                   PHYSICAL RESCUE SCENE                   │
-│       High Adrenaline · Contaminated Hands · Noise        │
-└──────────────────────────────┬────────────────────────────┘
-                              │ Voice Command (STT)
-                              ▼
-┌───────────────────────────────────────────────────────────┐
-│             HYBRID DUAL-ENGINE DISPATCH LAYER             │
-├─────────────────────────────┼─────────────────────────────┤
-│  CRITICAL PROTOCOLS         │  COMPLEX MEDICAL Q&A        │
-│  • Sudden Cardiac Arrest    │  • "Nosebleed bleeding"     │
-│  • Severe Choking           │  • "Chemical burns"         │
-│  • Arterial Bleeding        │  • "Diabetic shock"         │
-├─────────────────────────────┼─────────────────────────────┤
-│  Local Deterministic        │  Groq Llama-3.1 Engine      │
-│  Rescue Protocol (0 ms)     │  Deterministic system prompt│
-│                             │  output max 2 sentences     │
-└──────────────┴─────────────────────────────┴──────────────┘
-              │                             │              
-              ▼                             ▼              
-┌───────────────────────────────────────────────────────────┐
-│                 MULTIMODAL SENSORY OUTPUT                 │
-│   • Sensory Metronome — 110 BPM optical heartbeat pulse   │
-│   • Hands-Free Text-to-Speech — instant audio dispatch    │
-│    • Auto-Resuming Screen Wake Lock (visibilitychange)    │
-│  • Device-Aware Mobile Speech Lifecycle (iOS / Android)   │
-│    • Swiss-Brutalist High-Contrast Adaptive Typography    │
-│            • One-Tap Emergency 112 Dial Bridge            │
-└───────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                    PHYSICAL RESCUE SCENE                    │
+│         High Adrenaline · Contaminated Hands · Noise        │
+└──────────────────────────────┬──────────────────────────────┘
+                               │ Voice Command (STT)           
+                               ▼                               
+┌─────────────────────────────────────────────────────────────┐
+│              HYBRID DUAL-ENGINE DISPATCH LAYER              │
+├──────────────────────────────┼──────────────────────────────┤
+│  CRITICAL PROTOCOLS          │  COMPLEX MEDICAL Q&A         │
+│  • Sudden Cardiac Arrest     │  • "Nosebleed bleeding"      │
+│  • Severe Choking            │  • "Chemical burns"          │
+│  • Arterial Bleeding         │  • "Diabetic shock"          │
+├──────────────────────────────┼──────────────────────────────┤
+│  Local Deterministic         │  Secure Server-Side Proxy    │
+│  Rescue Protocol (0 ms)      │  Next.js Route Handler proxy │
+│                              │  Expert Prompting · 3 snt.   │
+│                              │  jewelry · ice · no vomiting │
+└──────────────┴──────────────────────────────┴───────────────┘
+               │                              │                
+               ▼                              ▼                
+┌─────────────────────────────────────────────────────────────┐
+│                  MULTIMODAL SENSORY OUTPUT                  │
+│   • Sensory Metronome — 110 BPM optical heartbeat pulse     │
+│   • Hands-Free Text-to-Speech — instant audio dispatch      │
+│    • Auto-Resuming Screen Wake Lock (visibilitychange)      │
+│  • Device-Aware Mobile Speech Lifecycle (iOS / Android)     │
+│    • Swiss-Brutalist High-Contrast Adaptive Typography      │
+│            • One-Tap Emergency 112 Dial Bridge              │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ## 📱 Adaptive Mobile-First Architecture
 
 Mobile operating systems enforce strict sandbox and power-saving policies that break standard browser AI workflows. LifeLine Voice incorporates dedicated mobile-hardened countermeasures:
 
-| Challenge on Mobile | System Failure Without Architecture | LifeLine Voice Solution |
-| --- | --- | --- |
-| Continuous Listening | Mobile OS forcibly kills the microphone after 3–5 s of silence (no-speech / aborted crash). | Discrete adaptive windows: desktop runs continuous listening; mobile switches to single-utterance windows with silent error reset. |
-| iOS Audio Autoplay Policy | Safari blocks `speechSynthesis` when triggered asynchronously by an AI API response. | User-gesture audio unlock: the first tap triggers a silent synthetic utterance, priming the iOS audio engine for hands-free speech. |
-| Mobile Screen Timeout | Phones dim and sleep after ~30 s of inactivity, locking the rescuer out during CPR. | Auto-resuming Screen Wake Lock: a `visibilitychange` listener re-acquires the screen lock whenever the app regains focus. |
-| 300 ms Tap Latency | Mobile browsers delay touch events to detect double taps. | `touch-action: manipulation` enforced globally on all emergency controls for true 0 ms touch response. |
+| Challenge on Mobile       | System Failure Without Architecture                                                         | LifeLine Voice Solution                                                                                                             |
+| ------------------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Continuous Listening      | Mobile OS forcibly kills the microphone after 3–5 s of silence (no-speech / aborted crash). | Discrete adaptive windows: desktop runs continuous listening; mobile switches to single-utterance windows with silent error reset.  |
+| iOS Audio Autoplay Policy | Safari blocks `speechSynthesis` when triggered asynchronously by an AI API response.        | User-gesture audio unlock: the first tap triggers a silent synthetic utterance, priming the iOS audio engine for hands-free speech. |
+| Mobile Screen Timeout     | Phones dim and sleep after ~30 s of inactivity, locking the rescuer out during CPR.         | Auto-resuming Screen Wake Lock: a `visibilitychange` listener re-acquires the screen lock whenever the app regains focus.           |
+| 300 ms Tap Latency        | Mobile browsers delay touch events to detect double taps.                                   | `touch-action: manipulation` enforced globally on all emergency controls for true 0 ms touch response.                              |
 
 ## 🚀 Key Features
 
@@ -91,7 +92,15 @@ The rescuer taps once, sets the phone beside the victim, and issues voice comman
 ### ⚡ Zero-Latency Deterministic Fallback vs. Dynamic AI Guidance
 
 - **Deterministic Local Path (0 ms)** — Core life-threatening emergencies (CPR, choking, severe bleeding, unconsciousness) trigger visual and auditory action protocols instantly, without waiting for network calls.
-- **Dynamic AI Reasoning (Groq Llama 3.1)** — Complex, open-ended queries (e.g., *"Patient has a nosebleed, what should I do?"*) are routed to Groq's low-latency inference engine, stripped of thinking tokens and constrained to strictly 2 actionable sentences.
+- **Dynamic AI Reasoning (Secure Server-Side Proxy)** — Complex, open-ended queries (e.g., _"Patient has a nosebleed, what should I do?"_) are routed through a secure Next.js Route Handler: the Groq API key never leaves the server (zero browser exposure), only the final answer returns. The endpoint strips thinking tokens and applies **expert-level prompting** that surfaces non-obvious, actionable steps in at most 3 sentences — e.g., *slide off rings before swelling locks them on*, *cool the burn with running water*, *never induce vomiting* after corrosive ingestion.
+
+### 🔒 Secure Server-Side AI Proxy (Route Handler)
+
+All AI requests are routed through a secure Next.js Route Handler — never a direct browser-to-Groq call.
+
+- **Security**: API keys are protected server-side (no exposure to Client/Browser).
+- **Stability**: Automatically handles Model-Not-Found (404) and API-Overload (429) errors with zero-crash fallback.
+- **Speed**: Direct server-to-server connection with Groq Cloud for sub-second responses.
 
 ### 💓 110 BPM Sensory Metronome with Context Lock
 
@@ -109,14 +118,16 @@ One-tap toggle between Polish and English locales; voice synthesis switches betw
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
-| --- | --- |
-| Framework | Next.js 15 (App Router, React Hooks, Turbopack) |
-| AI Inference | Groq Cloud API (`llama-3.1-8b-instant`, fallback orchestration) |
-| Speech Processing | Web Speech API (`SpeechRecognition` & `speechSynthesis`) |
-| Hardware Telemetry | Screen Wake Lock API, `visibilitychange` auto-recovery |
-| Styling & UI | Tailwind CSS, Lucide React, high-contrast emergency design system |
-| Device Handling | Adaptive desktop / mobile audio focus detection |
+| Layer              | Technology                                                        |
+| ------------------ | ----------------------------------------------------------------- |
+| Framework          | Next.js 15 (App Router, React Hooks, Turbopack)                   |
+| Architecture       | Secure Server-Side Route Handler Proxy (API keys never reach the browser) |
+| AI Inference       | Groq Cloud API (`llama-3.1-8b-instant`) — accessed only via the Secure Route Handler |
+| Prompting          | Expert-level system prompt: non-obvious steps (jewelry, ice, no vomiting), max 3 sentences |
+| Speech Processing  | Web Speech API (`SpeechRecognition` & `speechSynthesis`)          |
+| Hardware Telemetry | Screen Wake Lock API, `visibilitychange` auto-recovery            |
+| Styling & UI       | Tailwind CSS, Lucide React, high-contrast emergency design system |
+| Device Handling    | Adaptive desktop / mobile audio focus detection                   |
 
 ## 📦 Getting Started
 
@@ -141,10 +152,10 @@ Install dependencies:
 pnpm install
 ```
 
-Set up environment variables — create a `.env.local` file in the project root:
+Set up environment variables — create a `.env.local` file in the project root (read **server-side only**, never shipped to the browser):
 
 ```env
-NEXT_PUBLIC_GROQ_API_KEY=gsk_your_groq_api_key_here
+GROQ_API_KEY=gsk_your_groq_api_key_here
 ```
 
 Run the development server:
@@ -157,13 +168,13 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 🏆 Hackathon Evaluation Summary
 
-| Judging Criteria | How LifeLine Voice Solves It |
-| --- | --- |
-| Solving the Paradox (20%) | Turns raw, chatty LLMs into a real-time, deterministic, physically grounded rescue system that overcomes latency and hallucination. |
-| Technical Implementation (20%) | Clean hybrid architecture: Web Speech STT/TTS + Groq API + auto-resuming Mobile Wake Lock + context-locked sensory metronome. |
-| Innovation & Creativity (20%) | Moves away from generic text chatbots toward hands-free sensory audio/visual emergency hardware dispatch. |
-| Design & UX (20%) | High-contrast Swiss-Brutalist emergency typography designed for legibility during adrenaline-fueled panic. |
-| Completeness & Polish (20%) | Mobile-hardened (iOS/Android audio unlocking, error recovery), bilingual (PL/EN), zero-crash fallbacks. |
+| Judging Criteria               | How LifeLine Voice Solves It                                                                                                        |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Solving the Paradox (20%)      | Turns raw, chatty LLMs into a real-time deterministic rescue system: expert-level advice (jewelry, ice, no vomiting) instead of trivial chatter, with zero latency. |
+| Technical Implementation (20%) | Clean hybrid architecture: Web Speech STT/TTS + secure server-side Groq proxy (Route Handler) + auto-resuming Mobile Wake Lock + context-locked metronome. |
+| Innovation & Creativity (20%)  | Moves away from generic chatbots toward hands-free sensory dispatch — plus expert prompting that teaches non-obvious survival steps.  |
+| Design & UX (20%)              | High-contrast Swiss-Brutalist emergency typography designed for legibility during adrenaline-fueled panic.                          |
+| Completeness & Polish (20%)    | Mobile-hardened (iOS/Android audio unlocking, error recovery), bilingual (PL/EN), zero-crash fallbacks, API keys secured server-side. |
 
 ## 📜 License
 
