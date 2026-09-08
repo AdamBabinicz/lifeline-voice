@@ -11,6 +11,12 @@ Built for the **AI Builders Hackathon: Solving the Paradox of Intelligence Syste
 
 ---
 
+## 🎬 Video Demo (For the Jury)
+
+> **Watch the live demo / presentation video here:** [LifeLine Voice — Video Presentation](https://www.youtube.com/watch?v=e7ny73qZxac)
+
+---
+
 ## 📑 Table of Contents
 
 - [The Core Paradox](#the-core-paradox-the-limits-of-foundation-models)
