@@ -29,6 +29,7 @@ Built for the **AI Builders Hackathon: Solving the Paradox of Intelligence Syste
 - [Tech Stack](#tech-stack)
 - [Getting Started](#getting-started)
 - [Hackathon Evaluation Summary](#hackathon-evaluation-summary)
+- [Credits](#-credits)
 - [License](#license)
 
 ---
@@ -195,6 +196,10 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 | Innovation & Creativity (20%)  | Moves away from generic chatbots toward hands-free sensory dispatch — plus a constrained emergency prompt that teaches non-obvious survival steps.  |
 | Design & UX (20%)              | High-contrast Swiss-Brutalist emergency typography designed for legibility during adrenaline-fueled panic.                          |
 | Completeness & Polish (20%)    | Mobile-hardened (iOS/Android audio unlocking, error recovery), bilingual (PL/EN), graceful error fallbacks, API keys secured server-side. |
+
+## 👤 Credits
+
+LifeLine Voice was developed by **Adam Gierczak** as a solo project, leveraging a specialized AI-assisted workflow including v0.dev (UI scaffolding), GenSpark (research), ChatGPT and Claude (logic & architecture).
 
 ## 📜 License
 

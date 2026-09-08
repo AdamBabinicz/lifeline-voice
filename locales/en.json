@@ -8,6 +8,7 @@
   "btn_choking": "CHOKING",
   "btn_bleeding": "BLEEDING",
   "btn_unconscious": "UNCONSCIOUS",
+  "btn_scroll_top": "SCROLL TO TOP",
   "instruction_initial": "Select an emergency protocol to begin.",
   "instruction_cpr": "Begin chest compressions now. Push hard and fast in the center of the chest.",
   "instruction_choking": "Give 5 back blows, then 5 abdominal thrusts. Repeat until help arrives.",
@@ -49,5 +50,11 @@
   "back_home": "← FIRST AID // COMMAND",
   "legal_label": "LEGAL",
   "privacy_title": "Privacy Policy",
-  "terms_title": "Terms of Service"
+  "terms_title": "Terms of Service",
+  "privacy_intro": "Transparency and speed are critical in emergencies. This document outlines how we handle data.",
+  "privacy_body_one": "This application uses Google Tag Manager (GTM) and Google Analytics (GA) to track user interactions for hackathon performance analysis. We use cookies to store your language and theme preferences.",
+  "privacy_body_two": "Voice data is processed locally via the Web Speech API or sent to Groq Cloud API for inference. No personal medical data is stored on our servers. Developed by [User] with the assistance of v0.dev, GenSpark, and AI models (Claude, ChatGPT).",
+  "terms_intro": "By using LifeLine Voice, you agree to the following conditions regarding emergency guidance.",
+  "terms_body_one": "LifeLine Voice is an experimental AI tool built for the AI Builders Hackathon. It is NOT a substitute for professional medical advice or emergency services. Always call 112/911 first.",
+  "terms_body_two": "The AI instructions are provided 'as is'. While optimized for accuracy, the developers are not liable for any actions taken based on AI-generated guidance. Use at your own risk."
 }

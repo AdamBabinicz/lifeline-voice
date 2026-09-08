@@ -8,6 +8,7 @@
   "btn_choking": "ZADŁAWIENIE",
   "btn_bleeding": "KRWAWIENIE",
   "btn_unconscious": "NIEPRZYTOMNY",
+  "btn_scroll_top": "PRZEWIŃ DO GÓRY",
   "instruction_initial": "Wybierz protokół, aby rozpocząć.",
   "instruction_cpr": "Rozpocznij uciski klatki piersiowej. Uciskaj mocno i szybko na środku klatki.",
   "instruction_choking": "Wykonaj 5 uderzeń w plecy, następnie 5 uciśnięć nadbrzusza. Powtarzaj do przyjazdu pomocy.",
@@ -49,5 +50,11 @@
   "back_home": "← PIERWSZA POMOC // CENTRUM",
   "legal_label": "PRAWO",
   "privacy_title": "Polityka prywatności",
-  "terms_title": "Warunki korzystania"
+  "terms_title": "Warunki korzystania",
+  "privacy_intro": "Transparentność i szybkość reakcji są kluczowe. Poniżej wyjaśniamy, jak dbamy o Twoje dane.",
+  "privacy_body_one": "Aplikacja korzysta z narzędzi Google Tag Manager (GTM) oraz Google Analytics (GA) w celu analizy ruchu i optymalizacji interfejsu pod kątem hackathonu. Wykorzystujemy pliki cookies do zapisywania Twoich preferencji języka oraz motywu.",
+  "privacy_body_two": "Dane głosowe są przetwarzane w czasie rzeczywistym przez Web Speech API lub przesyłane bezpiecznie do Groq Cloud API. Nie przechowujemy prywatnych danych medycznych na serwerach. Projekt rozwijany przez Adama Gierczaka przy użyciu v0.dev, GenSpark oraz modeli AI (Claude, ChatGPT, ChatGPT).",
+  "terms_intro": "Korzystając z LifeLine Voice, akceptujesz zasady działania asystenta AI w sytuacjach nagłych.",
+  "terms_body_one": "LifeLine Voice to eksperymentalny projekt na hackathon AI Builders. NIE JEST to certyfikowany wyrób medyczny. W przypadku zagrożenia życia zawsze w pierwszej kolejności zadzwoń pod numer 112.",
+  "terms_body_two": "Instrukcje generowane przez AI są dostarczane w stanie 'as-is'. Twórcy nie ponoszą odpowiedzialności za błędy modeli językowych ani skutki działań podjętych na podstawie porad głosowych. Używasz aplikacji na własną odpowiedzialność."
 }

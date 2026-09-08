@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
+import { ScrollToTop } from "./scroll-to-top"; // IMPORT NOWEGO KOMPONENTU
 import {
   StatusHeader,
   ProtocolCard,
@@ -577,6 +578,7 @@ export function EmergencyDashboard() {
         </div>
       </footer>
 
+      {/* ELEMENTY FIXED NA KOŃCU DLA PRAWIDŁOWEGO Z-INDEX */}
       <a
         href="tel:112"
         className="fixed bottom-3 right-3 sm:bottom-6 sm:right-6 z-[100] flex items-center gap-2.5 sm:gap-4 bg-primary px-4 py-3 sm:px-6 sm:py-4 text-primary-foreground shadow-2xl transition-transform hover:scale-105 active:scale-95"
@@ -591,6 +593,8 @@ export function EmergencyDashboard() {
           </span>
         </span>
       </a>
+
+      <ScrollToTop />
     </div>
   );
 }
