@@ -81,21 +81,23 @@ export default function RootLayout({
 
               // Read existing consent if available
               var initialAnalytics = 'denied';
+              var initialMarketing = 'denied';
               try {
-                var stored = localStorage.getItem('lifeline_cookie_consent_v1');
+                var stored = localStorage.getItem('lifeline_cookie_consent_v1') || localStorage.getItem('lifeline_cookie_consent');
                 if (stored) {
                   var parsed = JSON.parse(stored);
-                  if (parsed && parsed.analytics) {
-                    initialAnalytics = 'granted';
+                  if (parsed) {
+                    if (parsed.analytics) initialAnalytics = 'granted';
+                    if (parsed.marketing) initialMarketing = 'granted';
                   }
                 }
               } catch(e) {}
 
               gtag('consent', 'default', {
                 'analytics_storage': initialAnalytics,
-                'ad_storage': 'denied',
-                'ad_user_data': 'denied',
-                'ad_personalization': 'denied',
+                'ad_storage': initialMarketing,
+                'ad_user_data': initialMarketing,
+                'ad_personalization': initialMarketing,
                 'wait_for_update': 500
               });
             `,
