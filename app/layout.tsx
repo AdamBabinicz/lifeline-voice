@@ -34,7 +34,7 @@ const META_TITLE = "LifeLine Voice – Asystent Pierwszej Pomocy i RKO";
 
 // Dokładnie 150 znaków
 const META_DESCRIPTION =
-  "Głosowy asystent pierwszej pomocy i RKO. Natychmiastowe instrukcje ratunkowe, metronom 110 BPM oraz automatyczne wsparcie w nagłych wypadkach bez użycia rąk.";
+  "Głosowy asystent pierwszej pomocy i RKO. Szybkie instrukcje ratunkowe, metronom 110 BPM oraz automatyczne wsparcie w nagłych wypadkach bez użycia rąk.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -115,7 +115,7 @@ export const metadata: Metadata = {
     description: META_DESCRIPTION,
     images: [
       {
-        url: "/og-image.png",
+        url: "/images/1.png",
         width: 1200,
         height: 630,
         alt: "LifeLine Voice – Emergency Response Command",
