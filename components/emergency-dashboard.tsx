@@ -398,7 +398,6 @@ export function EmergencyDashboard() {
       setErrorMessage(null);
       setSelected(null);
 
-      // Zawsze natychmiast uzyskujemy trafną poradę medyczną z bazy wiedzy ratowniczej
       const guidance = getOfflineRescueGuidance(queryText, locale);
       setAiGuidance(guidance);
       speakInstruction(guidance);
@@ -622,7 +621,10 @@ export function EmergencyDashboard() {
       />
 
       <main className="mx-auto flex max-w-7xl flex-col gap-4 sm:gap-6 px-3 sm:px-6 py-4 sm:py-8 pb-8 sm:pb-12 lg:px-8 flex-1 w-full">
-        <section className="relative overflow-hidden border border-border bg-card">
+        <section
+          aria-label="Główna instrukcja ratunkowa"
+          className="relative overflow-hidden border border-border bg-card"
+        >
           <div className="absolute inset-y-0 left-0 w-1 bg-primary z-10" />
 
           {selected && !aiGuidance && (
@@ -637,7 +639,8 @@ export function EmergencyDashboard() {
             <div className="flex flex-col gap-4 sm:gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-4xl">
                 <div className="mb-2 sm:mb-3 flex flex-wrap items-center gap-2 sm:gap-3">
-                  <p className="font-mono text-[10px] sm:text-xs font-bold tracking-[0.15em] sm:tracking-[0.2em] text-primary uppercase">
+                  {/* H2 semantyczny o identycznym wyglądzie jak dawny paragraf */}
+                  <h2 className="font-mono text-[10px] sm:text-xs font-bold tracking-[0.15em] sm:tracking-[0.2em] text-primary uppercase">
                     {isThinking
                       ? t.voice_processing
                       : aiGuidance
@@ -649,7 +652,7 @@ export function EmergencyDashboard() {
                             ? "AKTYWNY PROTOKÓŁ"
                             : "ACTIVE PROTOCOL"
                           : t.system_ready}
-                  </p>
+                  </h2>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -669,19 +672,36 @@ export function EmergencyDashboard() {
           </div>
         </section>
 
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
-          {protocols.map((protocol) => (
-            <ProtocolCard
-              key={protocol.id}
-              protocol={protocol}
-              selected={selected === protocol.id && !aiGuidance}
-              label={protocol.label}
-              onSelect={() => handleProtocolSelect(protocol.id)}
-            />
-          ))}
-        </div>
+        {/* Sekcja wyboru protokołów ratunkowych z nagłówkiem H2 */}
+        <section aria-labelledby="protocols-heading" className="w-full">
+          <h2 id="protocols-heading" className="sr-only">
+            {locale === "pl"
+              ? "Protokoły pierwszej pomocy"
+              : "First Aid Emergency Protocols"}
+          </h2>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+            {protocols.map((protocol) => (
+              <ProtocolCard
+                key={protocol.id}
+                protocol={protocol}
+                selected={selected === protocol.id && !aiGuidance}
+                label={protocol.label}
+                onSelect={() => handleProtocolSelect(protocol.id)}
+              />
+            ))}
+          </div>
+        </section>
 
-        <section className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-3">
+        <section
+          aria-labelledby="tools-heading"
+          className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-3"
+        >
+          <h2 id="tools-heading" className="sr-only">
+            {locale === "pl"
+              ? "Narzędzia wspomagające ratownika"
+              : "Rescuer Support Tools"}
+          </h2>
+
           <div className="space-y-4">
             <Metronome
               active={metronomeActive}
@@ -694,7 +714,7 @@ export function EmergencyDashboard() {
           <div className="border border-border bg-card p-4 sm:p-6 md:col-span-2 flex flex-col justify-between">
             <div className="space-y-3 sm:space-y-4">
               <div className="flex items-center justify-between">
-                <p className="font-mono text-[10px] sm:text-xs font-bold tracking-[0.2em] text-primary uppercase flex items-center gap-2">
+                <h3 className="font-mono text-[10px] sm:text-xs font-bold tracking-[0.2em] text-primary uppercase flex items-center gap-2">
                   <span className="relative flex size-2">
                     {isListening && (
                       <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-75" />
@@ -702,7 +722,7 @@ export function EmergencyDashboard() {
                     <span className="relative inline-flex size-2 rounded-full bg-primary" />
                   </span>
                   <span>{lastUserQuery || t.voice_ready}</span>
-                </p>
+                </h3>
               </div>
 
               <div className="py-2">
