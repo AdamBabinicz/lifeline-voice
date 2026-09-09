@@ -1,0 +1,9 @@
+# LifeLine Voice — Emergency Response Command
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://lifeline-command.netlify.app/sitemap.xml
+
+# LLM Information
+# For AI crawlers and assistants

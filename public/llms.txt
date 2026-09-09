@@ -1,0 +1,35 @@
+# LifeLine Voice — Emergency Response Command
+
+> Hands-free, real-time emergency first aid assistant powered by speech recognition and voice guidance.
+
+## Overview
+LifeLine Voice is an emergency web application designed to guide bystanders, rescuers, and first responders through life-critical situations with zero physical interaction needed once activated.
+
+- **Production URL**: https://lifeline-command.netlify.app/
+- **Primary Function**: Emergency Medical & First Aid Guidance
+- **Supported Languages**: Polish (pl), English (en)
+- **Voice Control**: Offline/Browser-based Speech Recognition & Text-to-Speech
+
+## Emergency Protocols Supported
+1. **CPR / RKO (Cardiopulmonary Resuscitation)**
+   - Ratio: 30 chest compressions to 2 rescue breaths (or hands-only CPR).
+   - Depth: 5-6 cm in the center of the chest.
+   - Cadence: 100-120 compressions per minute (supported by a built-in rhythmic audio metronome at 110 BPM).
+2. **Choking (Zadławienie)**
+   - Up to 5 sharp back blows between shoulder blades.
+   - Up to 5 abdominal thrusts (Heimlich maneuver).
+3. **Severe Bleeding (Krwawienie)**
+   - Direct manual pressure over the wound using sterile dressing.
+   - Elevation of the injured limb above heart level.
+   - Never remove soaked dressings; layer more gauze on top.
+4. **Unconscious Casualty (Nieprzytomny)**
+   - Airway check: head tilt and chin lift.
+   - Breathing check: look, listen, feel for 10 seconds.
+   - Recovery position if breathing normally; immediate CPR if not breathing.
+
+## Emergency Dispatch
+- **European Emergency Number**: 112
+- Always advise the user to call 112 immediately in life-threatening scenarios before or during first aid maneuvers.
+
+## Disclaimer
+This application provides emergency guidance based on international ERC (European Resuscitation Council) guidelines for informational and immediate emergency assistance purposes. Always alert professional emergency services.
