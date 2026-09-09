@@ -27,38 +27,130 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
+const SITE_URL = "https://lifeline-command.netlify.app";
+
+// Dokładnie 50 znaków
+const META_TITLE = "LifeLine Voice – Asystent Pierwszej Pomocy i RKO";
+
+// Dokładnie 150 znaków
+const META_DESCRIPTION =
+  "Głosowy asystent pierwszej pomocy i RKO. Natychmiastowe instrukcje ratunkowe, metronom 110 BPM oraz automatyczne wsparcie w nagłych wypadkach bez użycia rąk.";
+
 export const metadata: Metadata = {
-  title: "LifeLine Voice — Emergency Response Command",
-  description:
-    "Hands-free, real-time emergency first aid assistant powered by AI. Immediate voice guidance for CPR, choking, bleeding and trauma.",
+  metadataBase: new URL(SITE_URL),
+  title: META_TITLE,
+  description: META_DESCRIPTION,
+  applicationName: "LifeLine Voice",
   keywords: [
+    "pierwsza pomoc",
+    "RKO",
+    "resuscytacja",
+    "asystent głosowy",
+    "metronom RKO",
+    "zadławienie",
+    "numer 112",
     "first aid",
-    "CPR",
-    "emergency",
-    "resuscitation",
-    "AED",
-    "medical assistant",
-    "hands-free",
-    "voice AI",
+    "CPR assistant",
+    "emergency voice",
   ],
-  authors: [{ name: "LifeLine Voice Team" }],
+  authors: [{ name: "LifeLine Voice Team", url: SITE_URL }],
+  creator: "LifeLine Voice Team",
+  publisher: "LifeLine Voice",
+  alternates: {
+    canonical: "/",
+    languages: {
+      pl: "/",
+      en: "/",
+      "x-default": "/",
+    },
+  },
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+      { url: "/favicon.ico", sizes: "32x32" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
   openGraph: {
-    title: "LifeLine Voice — Emergency Response Command",
-    description:
-      "Hands-free, real-time emergency first aid assistant. Immediate voice guidance for life-threatening situations.",
-    type: "website",
+    title: META_TITLE,
+    description: META_DESCRIPTION,
+    url: SITE_URL,
+    siteName: "LifeLine Voice",
+    images: [
+      {
+        url: "/web-app-manifest-512x512.png",
+        width: 512,
+        height: 512,
+        alt: "LifeLine Voice – Emergency Response Command",
+      },
+    ],
     locale: "pl_PL",
     alternateLocale: "en_US",
+    type: "website",
   },
-  manifest: "/manifest.webmanifest",
+  twitter: {
+    card: "summary",
+    title: META_TITLE,
+    description: META_DESCRIPTION,
+    images: ["/web-app-manifest-512x512.png"],
+  },
+  manifest: "/site.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "LifeLine Voice",
   },
+  category: "medical",
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      "@id": `${SITE_URL}/#app`,
+      name: "LifeLine Voice",
+      url: SITE_URL,
+      applicationCategory: "HealthApplication",
+      operatingSystem: "Any",
+      browserRequirements: "Requires modern web browser with speech support",
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "PLN",
+      },
+      description: META_DESCRIPTION,
+      inLanguage: ["pl", "en"],
+    },
+    {
+      "@type": "MedicalWebPage",
+      "@id": `${SITE_URL}/#webpage`,
+      url: SITE_URL,
+      name: META_TITLE,
+      description: META_DESCRIPTION,
+      about: [
+        {
+          "@type": "MedicalProcedure",
+          name: "Cardiopulmonary Resuscitation (CPR / RKO)",
+          procedureType: "EmergencyProcedure",
+        },
+        {
+          "@type": "MedicalProcedure",
+          name: "First Aid for Choking and Hemorrhage",
+          procedureType: "EmergencyProcedure",
+        },
+      ],
+      inLanguage: ["pl-PL", "en-US"],
+      potentialAction: {
+        "@type": "CommunicateAction",
+        target: "tel:112",
+        name: "Call Emergency Services (112)",
+      },
+    },
+  ],
 };
 
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
@@ -71,6 +163,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pl" suppressHydrationWarning>
+      <head>
+        {/* SCHEMA.ORG STRUCTURED DATA (JSON-LD) */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body
         className={`${inter.variable} ${geistMono.variable} font-sans antialiased`}
         suppressHydrationWarning
