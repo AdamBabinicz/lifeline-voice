@@ -68,7 +68,7 @@ function fixPolishGrammar(text: string): string {
     )
     .replace(
       /\bpołóż\s+go\s+na\s+boku\b/gi,
-      "ułóż poszkodowanego w pozycji bocznej ustalonej",
+      "Ułóż poszkodowanego w pozycji bocznej ustalonej",
     )
     .replace(/\bdaj\s+mu\s+zimny\s+lód\b/gi, "podaj lód")
     .replace(/\bdaj\s+mu\s+lód\b/gi, "podaj lód");
@@ -109,22 +109,31 @@ function buildMessages(userQuery: string, locale: Locale): GroqMessage[] {
   const systemInstructions =
     locale === "pl"
       ? [
-          "Jesteś doświadczonym dyspozytorem medycznym i ratownikiem.",
-          "Udziel wyłącznie zwięzłych, bezpośrednich wskazówek pierwszej pomocy.",
-          "Odpowiedz maksymalnie w 2-3 krótkich zdaniach w trybie rozkazującym.",
-          "W przypadku krwawienia z nosa: każ pochylić głowę lekko do przodu (nigdy do tyłu!), ścisnąć skrzydełka nosa przez 10 minut i przyłożyć zimny okład na kark.",
-          "Dbaj o nienaganną gramatykę języka polskiego: nie używaj kalk językowych (np. pisz 'posadź dziecko', a nie 'usiądź dziecko').",
-          "W przypadku duszności, obrzęku dróg oddechowych, ukąszenia w jamę ustną lub utraty przytomności każ natychmiast wezwać 112.",
-          "Nie dodawaj wstępów, ostrzeżeń marketingowych ani markdownu.",
+          "Jesteś profesjonalnym dyspozytorem ratownictwa medycznego (numer 112).",
+          "Twoim celem jest podanie natychmiastowych, bezpiecznych wytycznych ratujących życie.",
+          "ODPOWIADAJ ZAWSZE W PUNKTACH: 1., 2., 3., maksymalnie 3-4 zwięzłe punkty w trybie rozkazującym.",
+          "ZASADY DLA POŁKNIĘCIA CHEMII, KAPSUŁEK DO PRANIA, DETERGENTÓW LUB LEKÓW:",
+          "1. KROK 1: BEZWZGLĘDNIE NIE WYWOŁUJ WYMIOTÓW (ryzyko chemicznego zalania płuc i poparzenia przełyku).",
+          "2. KROK 2: NATYCHMIAST WEZWIJ 112 i przygotuj opakowanie środka.",
+          "3. KROK 3: Wyjmij resztki z jamy ustnej i wypłucz usta wodą (nie zmuszaj do połykania płynów).",
+          "4. KROK 4: Posadź poszkodowanego pionowo i kontroluj oddech.",
+          "ZASADY DLA KRWOTOKU Z NOSA: Pochyl lekko głowę do przodu (nigdy do tyłu!), zaciśnij skrzydełka nosa na 10 minut, przyłóż zimny okład na kark.",
+          "ZASADY DLA OPARZEŃ: Chłodź czystą, chłodną bieżącą wodą przez 15-20 minut. Nie przekłuwaj pęcherzy.",
+          "Dbaj o nienaganną gramatykę: pisz 'posadź poszkodowanego', a nie 'usiądź'.",
+          "Żadnych wstępów, powitań, pogrubień ani markdownu.",
         ].join(" ")
       : [
-          "You are an experienced paramedic and emergency dispatcher.",
-          "Give only immediate first-aid instructions.",
-          "Answer in at most 2-3 short sentences.",
-          "Use the imperative mood.",
-          "For nosebleeds: instruct to lean forward slightly (never tilt back), pinch the soft part of the nose for 10 minutes, and apply a cold compress to the neck.",
-          "If the situation sounds life-threatening (compromised airway, anaphylaxis, severe hemorrhage), instruct the user to call 112 immediately.",
-          "Do not add preambles, marketing disclaimers, or markdown.",
+          "You are a professional emergency medical dispatcher (911/112).",
+          "Provide immediate, life-saving instructions directly in ordered steps: 1., 2., 3.",
+          "Maximum 3-4 crisp imperative sentences.",
+          "INGESTION OF CHEMICALS / LAUNDRY PODS / DETERGENTS:",
+          "1. STEP 1: DO NOT INDUCE VOMITING (severe risk of aspiration and esophagus chemical burn).",
+          "2. STEP 2: CALL 112 IMMEDIATELY and keep the product packaging ready.",
+          "3. STEP 3: Remove any remnants and rinse mouth with water (do not force large amounts of liquids).",
+          "4. STEP 4: Keep the patient sitting upright and closely monitor airway and breathing.",
+          "FOR NOSEBLEEDS: Lean slightly forward (never back), pinch soft part of nose for 10 minutes, apply cold compress to neck.",
+          "FOR BURNS: Cool with cool running tap water for 15-20 minutes. Do not pop blisters.",
+          "No conversational filler, greetings, bolding, or markdown.",
         ].join(" ");
 
   return [
@@ -154,8 +163,8 @@ async function requestChatCompletion(
     body: JSON.stringify({
       model,
       messages,
-      temperature: 0.2,
-      max_tokens: 150,
+      temperature: 0.1,
+      max_tokens: 180,
       stream: false,
     }),
     cache: "no-store",
@@ -184,30 +193,51 @@ function getDeterministicFallback(query: string, locale: Locale): string {
 
   if (locale === "pl") {
     if (
+      q.includes("kulk") ||
+      q.includes("kapsuł") ||
+      q.includes("prani") ||
+      q.includes("połkn") ||
+      q.includes("chemia") ||
+      q.includes("detergent") ||
+      q.includes("płyn do naczyń") ||
+      q.includes("kret")
+    ) {
+      return "1. Nie wywołuj wymiotów – grozi to spienieniem i poparzeniem dróg oddechowych. 2. Natychmiast zadzwoń pod 112 i zabezpiecz opakowanie. 3. Wypłucz usta wodą i usuń resztki żelu. 4. Posadź poszkodowanego pionowo i kontroluj oddech.";
+    }
+    if (
       q.includes("nos") ||
       q.includes("katar") ||
       q.includes("krwotok z nosa")
     ) {
-      return "Pochyl głowę dziecka lekko do przodu. Ściśnij skrzydełka nosa przez 10 minut. Przyłóż zimny okład na kark.";
+      return "1. Pochyl głowę lekko do przodu, nie odchylaj do tyłu. 2. Ściśnij skrzydełka nosa przez 10 minut. 3. Przyłóż zimny okład na kark.";
     }
     if (q.includes("oparzen") || q.includes("sparzy") || q.includes("gorąc")) {
-      return "Chłodź oparzone miejsce czystą, chłodną wodą przez minimum 15 minut. Załóż jałowy, luźny opatrunek i nie przekłuwaj pęcherzy.";
+      return "1. Chłodź oparzenie czystą, chłodną bieżącą wodą przez 15-20 minut. 2. Załóż jałowy, luźny opatrunek. 3. Nie przekłuwaj pęcherzy. 4. Przy rozległych oparzeniach dzwoń pod 112.";
     }
     if (q.includes("użądlen") || q.includes("osa") || q.includes("pszczoł")) {
-      return "Usuń żądło podważając je paznokciem lub kartą. Przyłóż zimny okład. W razie obrzęku gardła natychmiast dzwoń pod 112.";
+      return "1. Podważ i usuń żądło paznokciem lub kartą, nie ściskaj go. 2. Przyłóż zimny okład. 3. Przy użądleniu w jamę ustną lub duszności natychmiast dzwoń pod 112.";
     }
     if (q.includes("udar") || q.includes("opadając") || q.includes("paraliż")) {
-      return "Sprawdź asymetrię twarzy i niedowład rąk. Natychmiast wezwij 112 i ułóż chorego z lekko uniesioną głową.";
+      return "1. Sprawdź opadanie kącika ust, osłabienie ręki i bełkotliwą mowę. 2. Natychmiast wezwij 112. 3. Ułóż chorego z lekko uniesioną głową i nie podawaj płynów.";
     }
-    return "Upewnij się, że poszkodowany oddycha i jest bezpieczny. W razie wątpliwości natychmiast dzwoń pod 112.";
+    return "1. Upewnij się, że miejsce jest bezpieczne. 2. Sprawdź przytomność i oddech. 3. W razie zagrożenia życia natychmiast dzwoń pod 112.";
   } else {
+    if (
+      q.includes("pod") ||
+      q.includes("swallow") ||
+      q.includes("laundry") ||
+      q.includes("detergent") ||
+      q.includes("chemical")
+    ) {
+      return "1. DO NOT induce vomiting to prevent airway burns and foaming. 2. Call 112 immediately and keep the packaging ready. 3. Rinse mouth with water and remove remnants. 4. Keep sitting upright and monitor breathing.";
+    }
     if (q.includes("nose") || q.includes("nosebleed")) {
-      return "Lean the child slightly forward. Pinch the soft part of the nose for 10 minutes. Apply a cold compress to the back of the neck.";
+      return "1. Lean slightly forward, never tilt back. 2. Pinch the soft part of the nose for 10 minutes. 3. Apply a cold compress to the neck.";
     }
     if (q.includes("burn") || q.includes("scald")) {
-      return "Cool the burn with cool running water for at least 15 minutes. Cover loosely with a sterile dressing.";
+      return "1. Cool with cool running water for 15-20 minutes. 2. Cover loosely with a sterile dressing. 3. Do not pop blisters. 4. Call 112 if severe.";
     }
-    return "Ensure the patient is breathing and safe. When in doubt, call 112 immediately.";
+    return "1. Ensure scene is safe. 2. Check responsiveness and breathing. 3. Call 112 immediately in life-threatening conditions.";
   }
 }
 
@@ -222,7 +252,6 @@ export async function getEmergencyGuidance(
   const apiKey = GROQ_API_KEY;
 
   if (apiKey) {
-    // 1. Sprawdzamy, jakie modele są faktycznie aktywne dla tego klucza
     const accessible = await getAccessibleModels(apiKey);
     const modelsToTry =
       accessible.length > 0
@@ -242,11 +271,10 @@ export async function getEmergencyGuidance(
           return guidance;
         }
       } catch {
-        // Ciche przejście do kolejnego modelu lub fallbacku bez zalewania konsoli
+        // Ciche przejście do kolejnego modelu
       }
     }
   }
 
-  // Błyskawiczny, natychmiastowy fallback ratunkowy
   return getDeterministicFallback(query.trim(), locale);
 }
