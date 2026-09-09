@@ -53,8 +53,8 @@ export const metadata: Metadata = {
     "CPR assistant",
     "emergency voice",
   ],
-  authors: [{ name: "LifeLine Voice Team", url: SITE_URL }],
-  creator: "LifeLine Voice Team",
+  authors: [{ name: "Adam Gierczak", url: "https://github.com/AdamBabinicz" }],
+  creator: "Adam Gierczak",
   publisher: "LifeLine Voice",
   alternates: {
     canonical: "/",
@@ -135,6 +135,39 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@graph": [
     {
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#organization`,
+      name: "LifeLine Voice",
+      url: SITE_URL,
+      logo: {
+        "@type": "ImageObject",
+        url: `${SITE_URL}/web-app-manifest-512x512.png`,
+        width: 512,
+        height: 512,
+      },
+      description: META_DESCRIPTION,
+      founder: {
+        "@type": "Person",
+        "@id": `${SITE_URL}/#author`,
+        name: "Adam Gierczak",
+        url: "https://github.com/AdamBabinicz",
+      },
+      contactPoint: {
+        "@type": "ContactPoint",
+        telephone: "112",
+        contactType: "emergency",
+        areaServed: "PL",
+        availableLanguage: ["Polish", "English"],
+      },
+    },
+    {
+      "@type": "Person",
+      "@id": `${SITE_URL}/#author`,
+      name: "Adam Gierczak",
+      url: "https://github.com/AdamBabinicz",
+      jobTitle: "Software Engineer & AI Builder",
+    },
+    {
       "@type": "WebApplication",
       "@id": `${SITE_URL}/#app`,
       name: "LifeLine Voice",
@@ -149,6 +182,12 @@ const jsonLd = {
       },
       description: META_DESCRIPTION,
       inLanguage: ["pl", "en"],
+      publisher: {
+        "@id": `${SITE_URL}/#organization`,
+      },
+      author: {
+        "@id": `${SITE_URL}/#author`,
+      },
     },
     {
       "@type": "MedicalWebPage",
@@ -169,6 +208,12 @@ const jsonLd = {
         },
       ],
       inLanguage: ["pl-PL", "en-US"],
+      publisher: {
+        "@id": `${SITE_URL}/#organization`,
+      },
+      author: {
+        "@id": `${SITE_URL}/#author`,
+      },
       potentialAction: {
         "@type": "CommunicateAction",
         target: "tel:112",
