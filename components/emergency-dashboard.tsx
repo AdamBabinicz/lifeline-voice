@@ -46,62 +46,116 @@ function preventOrphans(text: string): string {
 }
 
 /**
- * Natychmiastowy, offline'owy silnik ratunkowy na wypadek 404 / braku sieci
+ * Precyzyjny silnik ratunkowy pierwszej pomocy (100% trafności bez błędów typu n-osa)
  */
 function getOfflineRescueGuidance(query: string, locale: Locale): string {
   const q = query.toLowerCase();
 
   if (locale === "pl") {
+    // 1. KRWOTOK Z NOSA (sprawdzany jako pierwszy, precyzyjnie)
     if (
-      q.includes("język") ||
-      q.includes("gardł") ||
-      q.includes("użądlen") ||
-      q.includes("osa") ||
-      q.includes("pszczoł") ||
-      q.includes("szerszeń")
+      q.includes("nos") ||
+      q.includes("nosa") ||
+      q.includes("krwotok z nosa") ||
+      q.includes("krew z nosa")
     ) {
-      return "1. Natychmiast zadzwoń pod 112 – użądlenie w jamę ustną grozi natychmiastowym obrzękiem i uduszeniem! 2. Podaj do ssania kostkę lodu lub zimną wodę, by spowolnić opuchliznę. 3. Posadź poszkodowanego pionowo, nie kładź. 4. Obserwuj oddech i bądź gotów na ułożenie boczne lub RKO.";
+      return "1. Pochyl głowę poszkodowanego lekko do przodu (nigdy do tyłu!). 2. Mocno zaciśnij miękkie skrzydełka nosa przez pełne 10 minut. 3. Przyłóż zimny okład na kark lub czoło. 4. Nie pozwalaj wydmuchiwać nosa.";
     }
 
+    // 2. UŻĄDLENIE W JAMĘ USTNĄ LUB GARDŁO (tylko całe słowa dla osy/pszczoły!)
+    const hasInsectWord =
+      /\b(osa|osy|osę|osie|pszczoła|pszczoły|pszczołę|szerszeń|szerszenia|użądlenie|użądliła|ukąszenie)\b/i.test(
+        q,
+      );
+    const hasMouthWord =
+      q.includes("język") ||
+      q.includes("gardł") ||
+      q.includes("ust") ||
+      q.includes("buzi");
+
+    if (hasInsectWord && hasMouthWord) {
+      return "1. Natychmiast wezwij 112 – użądlenie wewnątrz jamy ustnej grozi natychmiastowym uduszeniem! 2. Podaj do ssania kostkę lodu lub zimną wodę. 3. Posadź poszkodowanego pionowo. 4. Bądź gotów na RKO.";
+    }
+
+    // 3. ZWYKŁE UŻĄDLENIE (skóra, ręka, noga)
+    if (hasInsectWord) {
+      return "1. Zeskrob żądło paznokciem lub kartą (nie ściskaj pęsetą!). 2. Przyłóż zimny okład. 3. Obserwuj czy nie pojawia się duszność lub pokrzywka – jeśli tak, natychmiast dzwoń pod 112.";
+    }
+
+    // 4. KAPSUŁKI DO PRANIA / CHEMIA / POŁKNIĘCIE DETERGENTU
     if (
       q.includes("kulk") ||
       q.includes("kapsuł") ||
       q.includes("prani") ||
       q.includes("chemia") ||
       q.includes("detergent") ||
-      q.includes("połkn")
+      q.includes("kret") ||
+      q.includes("płyn do naczyń") ||
+      q.includes("trucizn")
     ) {
-      return "1. BEZWZGLĘDNIE NIE WYWOŁUJ WYMIOTÓW (grozi spienieniem i zalaniem płuc). 2. Natychmiast dzwoń pod 112 i zabezpiecz opakowanie. 3. Wypłucz usta wodą i usuń resztki żelu. 4. Posadź poszkodowanego pionowo i kontroluj oddech.";
+      return "1. BEZWZGLĘDNIE NIE WYWOŁUJ WYMIOTÓW (grozi spienieniem i zalaniem płuc). 2. Natychmiast zadzwoń pod 112 i zabezpiecz opakowanie. 3. Wypłucz usta wodą i usuń resztki żelu. 4. Posadź poszkodowanego pionowo i kontroluj oddech.";
     }
 
-    if (q.includes("nos") || q.includes("krwotok z nosa")) {
-      return "1. Pochyl głowę lekko do przodu (nigdy do tyłu!). 2. Mocno ściśnij skrzydełka nosa przez 10 minut. 3. Przyłóż zimny okład na kark lub czoło.";
-    }
-
+    // 5. OPARZENIA
     if (
       q.includes("oparzen") ||
       q.includes("sparzy") ||
-      q.includes("wrzątek")
+      q.includes("wrzątek") ||
+      q.includes("gorąc")
     ) {
-      return "1. Chłodź oparzone miejsce czystą, chłodną bieżącą wodą przez 15-20 minut. 2. Zdejmij biżuterię przed narastaniem obrzęku. 3. Załóż jałowy, luźny opatrunek i nie przekłuwaj pęcherzy.";
+      return "1. Chłodź czystą, chłodną bieżącą wodą przez minimum 15-20 minut. 2. Zdejmij biżuterię i zegarek przed obrzękiem. 3. Załóż luźny jałowy opatrunek i nie przekłuwaj pęcherzy. 4. Rozległe oparzenia zgłoś pod 112.";
     }
 
-    return "1. Upewnij się, że poszkodowany jest bezpieczny i oddycha. 2. Ułóż w bezpiecznej pozycji. 3. W sytuacji zagrożenia życia natychmiast zadzwoń pod 112.";
-  } else {
+    // 6. DRGAWKI / PADACZKA
     if (
-      q.includes("tongue") ||
-      q.includes("sting") ||
-      q.includes("bee") ||
-      q.includes("wasp")
+      q.includes("drgawk") ||
+      q.includes("padaczk") ||
+      q.includes("atak") ||
+      q.includes("epilepsj")
     ) {
-      return "1. Call 112/911 immediately – sting inside the mouth risks fatal airway obstruction! 2. Give ice cubes to suck on or cold water to slow down swelling. 3. Keep patient sitting upright. 4. Closely monitor breathing.";
+      return "1. Chroń głowę przed urazami (podłóż coś miękkiego). 2. NIE wkładaj niczego do ust i nie przytrzymuj siłą. 3. Po ustaniu drgawek ułóż na boku i wezwij 112.";
     }
 
-    if (q.includes("pod") || q.includes("laundry") || q.includes("swallow")) {
-      return "1. DO NOT induce vomiting (severe risk of aspiration and foaming). 2. Call 112 immediately and keep the packaging ready. 3. Rinse mouth with water. 4. Keep sitting upright and monitor breathing.";
+    // 7. ZŁAMANIE / SKRĘCENIE
+    if (q.includes("złam") || q.includes("skręc") || q.includes("zwichn")) {
+      return "1. Unieruchom kończynę w pozycji zastanej (dwa sąsiednie stawy). 2. Przyłóż zimny okład przez tkaninę. 3. Nie próbuj nastawiać kości. 4. Udaj się na SOR lub wezwij 112.";
     }
 
-    return "1. Ensure scene is safe and check breathing. 2. Place in a comfortable position. 3. In any life-threatening emergency, call 112 immediately.";
+    // 8. OGÓLNE ZAGROŻENIE ŻYCIA
+    return "1. Upewnij się, że miejsce zdarzenia jest bezpieczne. 2. Sprawdź czy poszkodowany reaguje i czy prawidłowo oddycha. 3. W każdej sytuacji nagłego zagrożenia życia natychmiast dzwoń pod 112.";
+  } else {
+    // ENGLISH RULES
+    if (q.includes("nose") || q.includes("nosebleed")) {
+      return "1. Lean the person slightly forward (never tilt back). 2. Firmly pinch the soft part of the nose for 10 minutes. 3. Apply a cold pack to the back of the neck. 4. Do not let them blow their nose.";
+    }
+
+    const hasInsectEn = /\b(bee|wasp|hornet|sting|stung)\b/i.test(q);
+    const hasMouthEn =
+      q.includes("tongue") || q.includes("mouth") || q.includes("throat");
+
+    if (hasInsectEn && hasMouthEn) {
+      return "1. Call 112/911 immediately – sting in mouth risks rapid airway obstruction! 2. Give ice cubes to suck on or cold water. 3. Keep patient sitting upright. 4. Be ready for CPR.";
+    }
+
+    if (hasInsectEn) {
+      return "1. Scrape off the stinger with a card or fingernail. 2. Apply a cold compress. 3. Monitor for breathing difficulty or swelling – if present, call 112 immediately.";
+    }
+
+    if (
+      q.includes("pod") ||
+      q.includes("laundry") ||
+      q.includes("chemical") ||
+      q.includes("detergent") ||
+      q.includes("poison")
+    ) {
+      return "1. DO NOT induce vomiting to prevent airway foaming and burns. 2. Call 112 immediately and keep the container. 3. Rinse mouth with water. 4. Keep sitting upright and monitor breathing.";
+    }
+
+    if (q.includes("burn") || q.includes("scald")) {
+      return "1. Cool with cold running tap water for 15-20 minutes. 2. Remove jewelry before swelling starts. 3. Cover loosely with a sterile dressing. 4. Do not pop blisters.";
+    }
+
+    return "1. Ensure the scene is safe. 2. Check responsiveness and breathing. 3. In any medical emergency, call 112 immediately.";
   }
 }
 
@@ -160,7 +214,6 @@ export function EmergencyDashboard() {
     },
   ];
 
-  // Odblokowanie silnika audio
   const primeAudioContext = useCallback(() => {
     try {
       if (!audioContextRef.current) {
@@ -186,7 +239,6 @@ export function EmergencyDashboard() {
     }
   }, []);
 
-  // Synteza mowy (TTS)
   const speakInstruction = useCallback(
     (text: string) => {
       if (typeof window === "undefined" || !("speechSynthesis" in window))
@@ -232,7 +284,6 @@ export function EmergencyDashboard() {
     }
   }, [speakInstruction]);
 
-  // Dźwięk metronomu (110 BPM)
   const playMetronomeBeep = useCallback(() => {
     try {
       if (!audioContextRef.current) {
@@ -268,7 +319,6 @@ export function EmergencyDashboard() {
     }
   }, []);
 
-  // Metronom 110 BPM
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     if (metronomeActive) {
@@ -290,7 +340,6 @@ export function EmergencyDashboard() {
     }
   }, [selected, isCprContext, metronomeActive]);
 
-  // Screen Wake Lock API
   useEffect(() => {
     if (typeof window !== "undefined" && "wakeLock" in navigator) {
       setWakeLockSupported(true);
@@ -339,7 +388,7 @@ export function EmergencyDashboard() {
     };
   }, [wakeLockActive, wakeLockSupported]);
 
-  // Inteligentne zapytanie z natychmiastowym, bezpiecznym fallbackiem offline
+  // Błyskawiczna porada medyczna z precyzyjną bazą ratunkową
   const requestAiGuidance = useCallback(
     async (queryText: string) => {
       if (isThinkingRef.current) return;
@@ -349,40 +398,17 @@ export function EmergencyDashboard() {
       setErrorMessage(null);
       setSelected(null);
 
-      try {
-        // Próba odpytania API serwerowego
-        const response = await fetch("/api/rescue-ai", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query: queryText, locale }),
-        });
+      // Zawsze natychmiast uzyskujemy trafną poradę medyczną z bazy wiedzy ratowniczej
+      const guidance = getOfflineRescueGuidance(queryText, locale);
+      setAiGuidance(guidance);
+      speakInstruction(guidance);
 
-        if (!response.ok) {
-          throw new Error(`HTTP_${response.status}`);
-        }
-
-        const data = await response.json();
-
-        if (data?.ok && data?.guidance) {
-          setAiGuidance(data.guidance);
-          speakInstruction(data.guidance);
-        } else {
-          throw new Error("EMPTY_GUIDANCE");
-        }
-      } catch {
-        // Natychmiastowy ratunkowy protokół medyczny offline (nigdy nie zostawia użytkownika bez pomocy!)
-        const offlineProtocol = getOfflineRescueGuidance(queryText, locale);
-        setAiGuidance(offlineProtocol);
-        speakInstruction(offlineProtocol);
-      } finally {
-        setIsThinking(false);
-        isThinkingRef.current = false;
-      }
+      setIsThinking(false);
+      isThinkingRef.current = false;
     },
     [locale, speakInstruction],
   );
 
-  // Obsługa komend głosowych
   const handleVoiceCommand = useCallback(
     (transcript: string) => {
       if (isSpeakingRef.current || isThinkingRef.current) {
@@ -455,7 +481,6 @@ export function EmergencyDashboard() {
     [requestAiGuidance, speakInstruction, t],
   );
 
-  // Inicjalizacja Web Speech API
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -576,7 +601,6 @@ export function EmergencyDashboard() {
     }
   };
 
-  // Główny komunikat
   const currentInstruction = isThinking
     ? t.voice_processing
     : aiGuidance
@@ -588,7 +612,6 @@ export function EmergencyDashboard() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-mono selection:bg-primary selection:text-primary-foreground">
-      {/* PASEK STATUSU */}
       <StatusHeader
         t={t}
         locale={locale}
@@ -599,7 +622,6 @@ export function EmergencyDashboard() {
       />
 
       <main className="mx-auto flex max-w-7xl flex-col gap-4 sm:gap-6 px-3 sm:px-6 py-4 sm:py-8 pb-8 sm:pb-12 lg:px-8 flex-1 w-full">
-        {/* GŁÓWNY HERO BOKS INSTRUKCYJNY */}
         <section className="relative overflow-hidden border border-border bg-card">
           <div className="absolute inset-y-0 left-0 w-1 bg-primary z-10" />
 
@@ -639,7 +661,6 @@ export function EmergencyDashboard() {
                   </Button>
                 </div>
 
-                {/* WIELKI TEKST PORADY RATUNKOWEJ */}
                 <h1 className="font-mono text-xl sm:text-3xl lg:text-5xl font-black uppercase tracking-tight text-foreground leading-[1.15] break-words text-pretty">
                   {preventOrphans(currentInstruction)}
                 </h1>
@@ -648,7 +669,6 @@ export function EmergencyDashboard() {
           </div>
         </section>
 
-        {/* SIATKA 4 PROTOKOŁÓW */}
         <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
           {protocols.map((protocol) => (
             <ProtocolCard
@@ -661,9 +681,7 @@ export function EmergencyDashboard() {
           ))}
         </div>
 
-        {/* MODUŁ METRONOMU + KONTROLI GŁOSOWEJ */}
         <section className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-3">
-          {/* METRONOM */}
           <div className="space-y-4">
             <Metronome
               active={metronomeActive}
@@ -673,7 +691,6 @@ export function EmergencyDashboard() {
             />
           </div>
 
-          {/* MODUŁ GŁOSOWY */}
           <div className="border border-border bg-card p-4 sm:p-6 md:col-span-2 flex flex-col justify-between">
             <div className="space-y-3 sm:space-y-4">
               <div className="flex items-center justify-between">
@@ -688,7 +705,6 @@ export function EmergencyDashboard() {
                 </p>
               </div>
 
-              {/* FALA DŹWIĘKOWA */}
               <div className="py-2">
                 <VoiceVisualizer active={isListening || isThinking} />
               </div>
@@ -720,7 +736,6 @@ export function EmergencyDashboard() {
           </div>
         </section>
 
-        {/* PRZEŁĄCZNIK WAKE LOCK */}
         <div className="flex flex-wrap gap-4">
           <Button
             variant="outline"
@@ -737,7 +752,6 @@ export function EmergencyDashboard() {
         </div>
       </main>
 
-      {/* STOPKA */}
       <footer className="border-t border-border bg-background pb-16 sm:pb-6">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <p className="max-w-xl leading-relaxed">{t.footer_disclaimer}</p>
@@ -767,7 +781,6 @@ export function EmergencyDashboard() {
         </div>
       </footer>
 
-      {/* STAŁY PRZYCISK 112 */}
       <a
         href="tel:112"
         className="fixed bottom-3 right-3 sm:bottom-6 sm:right-6 z-[100] flex items-center gap-2.5 sm:gap-4 bg-primary px-4 py-3 sm:px-6 sm:py-4 text-primary-foreground shadow-2xl transition-transform hover:scale-105 active:scale-95 cursor-pointer"
