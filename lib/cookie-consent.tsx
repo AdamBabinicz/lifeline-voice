@@ -20,8 +20,29 @@ declare global {
 
 const COOKIE_STORAGE_KEY = "lifeline_cookie_consent_v1";
 
+const fallbackTranslations = {
+  cookies_title: "PRYWATNOŚĆ I PLIKI COOKIES",
+  cookies_description:
+    "Używamy niezbędnych plików cookies do działania systemu oraz opcjonalnych narzędzi analitycznych (Google Analytics 4 / GTM) w celu analizy stabilności i optymalizacji czasu reakcji interfejsu. Wybierz, na co wyrażasz zgodę.",
+  cookies_necessary_title: "Niezbędne (Wymagane)",
+  cookies_necessary_desc:
+    "Kluczowe dla działania interfejsu ratunkowego, preferencji językowych i zapamiętania decyzji o prywatności. Zawsze aktywne.",
+  cookies_analytics_title: "Analityczne (Google Analytics / GTM)",
+  cookies_analytics_desc:
+    "Anonimowe dane telemetryczne pomagające mierzyć wydajność i stabilność działania aplikacji w sytuacjach awaryjnych.",
+  cookies_always_active: "ZAWSZE AKTYWNE",
+  cookies_accept_all: "AKCEPTUJ WSZYSTKIE",
+  cookies_reject_optional: "ODRZUĆ OPCJONALNE",
+  cookies_customize: "USTAWIENIA",
+  cookies_save: "ZAPISZ WYBÓR",
+  cookies_close: "ZAMKNIJ",
+};
+
 export function CookieConsent() {
-  const { t } = useLanguage();
+  const langContext = useLanguage();
+  const t = langContext?.t || fallbackTranslations;
+
+  const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [preferences, setPreferences] = useState<CookiePreferences>({
@@ -58,6 +79,7 @@ export function CookieConsent() {
   };
 
   useEffect(() => {
+    setMounted(true);
     try {
       const stored = localStorage.getItem(COOKIE_STORAGE_KEY);
       if (!stored) {
@@ -86,13 +108,6 @@ export function CookieConsent() {
     setPreferences((prev) => ({
       ...prev,
       analytics: checked,
-    }));
-  };
-
-  const handleToggleMarketing = (checked: boolean) => {
-    setPreferences((prev) => ({
-      ...prev,
-      marketing: checked,
     }));
   };
 
@@ -132,7 +147,7 @@ export function CookieConsent() {
     setIsOpen(false);
   };
 
-  if (!isOpen) {
+  if (!mounted || !isOpen) {
     return null;
   }
 
@@ -189,7 +204,6 @@ export function CookieConsent() {
                   onChange={(e) => {
                     const val = e.target.checked;
                     handleToggleAnalytics(val);
-                    handleToggleMarketing(val);
                   }}
                   className="cursor-pointer accent-primary"
                 />
