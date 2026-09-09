@@ -45,6 +45,66 @@ function preventOrphans(text: string): string {
   );
 }
 
+/**
+ * Natychmiastowy, offline'owy silnik ratunkowy na wypadek 404 / braku sieci
+ */
+function getOfflineRescueGuidance(query: string, locale: Locale): string {
+  const q = query.toLowerCase();
+
+  if (locale === "pl") {
+    if (
+      q.includes("język") ||
+      q.includes("gardł") ||
+      q.includes("użądlen") ||
+      q.includes("osa") ||
+      q.includes("pszczoł") ||
+      q.includes("szerszeń")
+    ) {
+      return "1. Natychmiast zadzwoń pod 112 – użądlenie w jamę ustną grozi natychmiastowym obrzękiem i uduszeniem! 2. Podaj do ssania kostkę lodu lub zimną wodę, by spowolnić opuchliznę. 3. Posadź poszkodowanego pionowo, nie kładź. 4. Obserwuj oddech i bądź gotów na ułożenie boczne lub RKO.";
+    }
+
+    if (
+      q.includes("kulk") ||
+      q.includes("kapsuł") ||
+      q.includes("prani") ||
+      q.includes("chemia") ||
+      q.includes("detergent") ||
+      q.includes("połkn")
+    ) {
+      return "1. BEZWZGLĘDNIE NIE WYWOŁUJ WYMIOTÓW (grozi spienieniem i zalaniem płuc). 2. Natychmiast dzwoń pod 112 i zabezpiecz opakowanie. 3. Wypłucz usta wodą i usuń resztki żelu. 4. Posadź poszkodowanego pionowo i kontroluj oddech.";
+    }
+
+    if (q.includes("nos") || q.includes("krwotok z nosa")) {
+      return "1. Pochyl głowę lekko do przodu (nigdy do tyłu!). 2. Mocno ściśnij skrzydełka nosa przez 10 minut. 3. Przyłóż zimny okład na kark lub czoło.";
+    }
+
+    if (
+      q.includes("oparzen") ||
+      q.includes("sparzy") ||
+      q.includes("wrzątek")
+    ) {
+      return "1. Chłodź oparzone miejsce czystą, chłodną bieżącą wodą przez 15-20 minut. 2. Zdejmij biżuterię przed narastaniem obrzęku. 3. Załóż jałowy, luźny opatrunek i nie przekłuwaj pęcherzy.";
+    }
+
+    return "1. Upewnij się, że poszkodowany jest bezpieczny i oddycha. 2. Ułóż w bezpiecznej pozycji. 3. W sytuacji zagrożenia życia natychmiast zadzwoń pod 112.";
+  } else {
+    if (
+      q.includes("tongue") ||
+      q.includes("sting") ||
+      q.includes("bee") ||
+      q.includes("wasp")
+    ) {
+      return "1. Call 112/911 immediately – sting inside the mouth risks fatal airway obstruction! 2. Give ice cubes to suck on or cold water to slow down swelling. 3. Keep patient sitting upright. 4. Closely monitor breathing.";
+    }
+
+    if (q.includes("pod") || q.includes("laundry") || q.includes("swallow")) {
+      return "1. DO NOT induce vomiting (severe risk of aspiration and foaming). 2. Call 112 immediately and keep the packaging ready. 3. Rinse mouth with water. 4. Keep sitting upright and monitor breathing.";
+    }
+
+    return "1. Ensure scene is safe and check breathing. 2. Place in a comfortable position. 3. In any life-threatening emergency, call 112 immediately.";
+  }
+}
+
 export function EmergencyDashboard() {
   const [selected, setSelected] = useState<string | null>(null);
   const [metronomeActive, setMetronomeActive] = useState(false);
@@ -100,7 +160,7 @@ export function EmergencyDashboard() {
     },
   ];
 
-  // Odblokowanie silnika audio na Safari / iOS
+  // Odblokowanie silnika audio
   const primeAudioContext = useCallback(() => {
     try {
       if (!audioContextRef.current) {
@@ -126,7 +186,7 @@ export function EmergencyDashboard() {
     }
   }, []);
 
-  // Synteza mowy (TTS) z zabezpieczeniem przed sprzężeniem zwrotnym do mikrofonu
+  // Synteza mowy (TTS)
   const speakInstruction = useCallback(
     (text: string) => {
       if (typeof window === "undefined" || !("speechSynthesis" in window))
@@ -152,7 +212,6 @@ export function EmergencyDashboard() {
       }
 
       utterance.onend = () => {
-        // Krótki bufor bezpieczeństwa (300ms) po zakończeniu mowy na wyciszenie echa w pokoju
         setTimeout(() => {
           isSpeakingRef.current = false;
         }, 300);
@@ -209,7 +268,7 @@ export function EmergencyDashboard() {
     }
   }, []);
 
-  // Metronom 110 BPM (interwał 545ms)
+  // Metronom 110 BPM
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     if (metronomeActive) {
@@ -225,7 +284,6 @@ export function EmergencyDashboard() {
     };
   }, [metronomeActive, playMetronomeBeep]);
 
-  // Context lock: Zatrzymanie metronomu poza procedurą RKO
   useEffect(() => {
     if (!isCprContext && metronomeActive) {
       setMetronomeActive(false);
@@ -281,7 +339,7 @@ export function EmergencyDashboard() {
     };
   }, [wakeLockActive, wakeLockSupported]);
 
-  // Dynamiczne zapytanie do serwerowego asystenta AI
+  // Inteligentne zapytanie z natychmiastowym, bezpiecznym fallbackiem offline
   const requestAiGuidance = useCallback(
     async (queryText: string) => {
       if (isThinkingRef.current) return;
@@ -292,11 +350,16 @@ export function EmergencyDashboard() {
       setSelected(null);
 
       try {
+        // Próba odpytania API serwerowego
         const response = await fetch("/api/rescue-ai", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ query: queryText, locale }),
         });
+
+        if (!response.ok) {
+          throw new Error(`HTTP_${response.status}`);
+        }
 
         const data = await response.json();
 
@@ -304,20 +367,13 @@ export function EmergencyDashboard() {
           setAiGuidance(data.guidance);
           speakInstruction(data.guidance);
         } else {
-          const fallback =
-            locale === "pl"
-              ? "1. Zadbaj o bezpieczeństwo. 2. W razie wątpliwości natychmiast wezwij 112."
-              : "1. Ensure the scene is safe. 2. When in doubt, call 112 immediately.";
-          setAiGuidance(fallback);
-          speakInstruction(fallback);
+          throw new Error("EMPTY_GUIDANCE");
         }
       } catch {
-        const fallback =
-          locale === "pl"
-            ? "1. Brak połączenia z siecią. 2. W sytuacji zagrożenia życia natychmiast wezwij 112."
-            : "1. No network connection. 2. In life-threatening emergencies, call 112 immediately.";
-        setAiGuidance(fallback);
-        speakInstruction(fallback);
+        // Natychmiastowy ratunkowy protokół medyczny offline (nigdy nie zostawia użytkownika bez pomocy!)
+        const offlineProtocol = getOfflineRescueGuidance(queryText, locale);
+        setAiGuidance(offlineProtocol);
+        speakInstruction(offlineProtocol);
       } finally {
         setIsThinking(false);
         isThinkingRef.current = false;
@@ -326,10 +382,9 @@ export function EmergencyDashboard() {
     [locale, speakInstruction],
   );
 
-  // Inteligentna obsługa komend głosowych
+  // Obsługa komend głosowych
   const handleVoiceCommand = useCallback(
     (transcript: string) => {
-      // Ignoruj, gdy asystent właśnie mówi na głos przez głośnik lub przetwarza zapytanie
       if (isSpeakingRef.current || isThinkingRef.current) {
         return;
       }
@@ -339,7 +394,6 @@ export function EmergencyDashboard() {
 
       setLastUserQuery(transcript);
 
-      // Czy to jest prosta, krótka komenda wyboru protokołu (do 3 słów)?
       const words = lower.split(/\s+/).filter(Boolean);
       const isShortCommand = words.length <= 3;
 
@@ -396,13 +450,12 @@ export function EmergencyDashboard() {
         }
       }
 
-      // Wszystkie inne zdania i pytania trafiają do asystenta AI
       requestAiGuidance(transcript);
     },
     [requestAiGuidance, speakInstruction, t],
   );
 
-  // Web Speech API: Inicjalizacja nasłuchu
+  // Inicjalizacja Web Speech API
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -420,7 +473,6 @@ export function EmergencyDashboard() {
     recognition.lang = locale === "pl" ? "pl-PL" : "en-US";
 
     recognition.onresult = (event: any) => {
-      // Ignoruj wyniki wywołane podczas mówienia syntezatora
       if (isSpeakingRef.current || isThinkingRef.current) {
         return;
       }
@@ -524,7 +576,7 @@ export function EmergencyDashboard() {
     }
   };
 
-  // DYNAMICZNY GŁÓWNY KOMUNIKAT
+  // Główny komunikat
   const currentInstruction = isThinking
     ? t.voice_processing
     : aiGuidance
@@ -551,7 +603,6 @@ export function EmergencyDashboard() {
         <section className="relative overflow-hidden border border-border bg-card">
           <div className="absolute inset-y-0 left-0 w-1 bg-primary z-10" />
 
-          {/* Animacja procedury - TYLKO gdy wybrany jest konkretny protokół i NIE MA porady AI */}
           {selected && !aiGuidance && (
             <ProtocolAnimation
               id={selected}
