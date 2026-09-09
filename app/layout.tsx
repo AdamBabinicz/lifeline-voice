@@ -91,7 +91,7 @@ export const metadata: Metadata = {
     siteName: "LifeLine Voice",
     images: [
       {
-        url: "/images/1.png",
+        url: "/images/2.png",
         width: 1200,
         height: 630,
         type: "image/png",
