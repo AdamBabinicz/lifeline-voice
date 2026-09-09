@@ -42,6 +42,9 @@ export const metadata: Metadata = {
     "voice AI",
   ],
   authors: [{ name: "LifeLine Voice Team" }],
+  icons: {
+    icon: "/favicon.ico",
+  },
   openGraph: {
     title: "LifeLine Voice — Emergency Response Command",
     description:
@@ -79,11 +82,10 @@ export default function RootLayout({
               function gtag(){dataLayer.push(arguments);}
               window.gtag = gtag;
 
-              // Read existing consent if available
               var initialAnalytics = 'denied';
               var initialMarketing = 'denied';
               try {
-                var stored = localStorage.getItem('lifeline_cookie_consent_v1') || localStorage.getItem('lifeline_cookie_consent');
+                var stored = localStorage.getItem('lifeline_cookie_consent_v1');
                 if (stored) {
                   var parsed = JSON.parse(stored);
                   if (parsed) {
@@ -147,6 +149,7 @@ export default function RootLayout({
       </head>
       <body
         className={`${inter.variable} ${geistMono.variable} font-sans antialiased`}
+        suppressHydrationWarning
       >
         {/* GTM NOSCRIPT FALLBACK */}
         {GTM_ID && (
