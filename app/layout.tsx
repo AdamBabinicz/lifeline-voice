@@ -30,7 +30,7 @@ export const viewport: Viewport = {
 const SITE_URL = "https://lifeline-command.netlify.app";
 
 // Dokładnie 50 znaków
-const META_TITLE = "LifeLine Voice – Asystent Pierwszej Pomocy i RKO";
+const META_TITLE = "LifeLine Voice – Asystent Pierwszej Pomocy oraz RKO";
 
 // Dokładnie 150 znaków
 const META_DESCRIPTION =
