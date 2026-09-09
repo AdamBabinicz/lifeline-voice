@@ -50,5 +50,15 @@
   "cpr_full_guidance": "Place your hands in the center of the chest. Keep your arms straight at the elbows. Push hard and fast to a depth of 5-6 cm in sync with the metronome. After 30 compressions, deliver 2 rescue breaths. If untrained or unwilling to give breaths, continue continuous chest compressions.",
   "choking_desc": "Lean the patient forward. Deliver up to 5 sharp back blows between the shoulder blades. If ineffective, deliver up to 5 abdominal thrusts (Heimlich maneuver).",
   "bleeding_desc": "Apply immediate, direct pressure to the wound with a sterile dressing or clean cloth. Elevate the injured limb above heart level if possible. Do not remove soaked dressings — add more layers on top.",
-  "unconscious_desc": "Open the airway by tilting the head back and lifting the chin. Check for normal breathing for 10 seconds (look, listen, feel). If breathing normally — place in the recovery position. If not breathing — begin CPR immediately."
+  "unconscious_desc": "Open the airway by tilting the head back and lifting the chin. Check for normal breathing for 10 seconds (look, listen, feel). If breathing normally — place in the recovery position. If not breathing — begin CPR immediately.",
+  "back_home": "← FIRST AID // COMMAND",
+  "legal_label": "LEGAL",
+  "privacy_title": "Privacy Policy",
+  "privacy_intro": "This policy explains how information is handled when using the Emergency First Aid Dashboard.",
+  "privacy_body_one": "The dashboard is designed to provide rapid first aid guidance and does not collect or store personal medical records.",
+  "privacy_body_two": "Anonymous operational telemetry and performance cookies (Google Analytics 4 / GTM) may be used strictly to evaluate interface response times and system stability during emergencies.",
+  "terms_title": "Terms of Service",
+  "terms_intro": "These terms describe the intended use of the LifeLine Voice Emergency First Aid Dashboard.",
+  "terms_body_one": "This interface provides automated first aid guidance for emergency situations. It does not replace professional emergency dispatchers or certified medical professionals.",
+  "terms_body_two": "In any life-threatening emergency, immediately call your local emergency services (112 in the EU) and follow the instructions of emergency operators."
 }

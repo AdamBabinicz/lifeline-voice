@@ -50,5 +50,15 @@
   "cpr_full_guidance": "Ułóż dłonie na środku klatki piersiowej. Wyprostuj ramiona w łokciach. Uciskaj mocno na głębokość 5-6 cm w rytm metronomu. Po 30 uciśnięciach wykonaj 2 wdechy ratownicze. Jeśli nie możesz wykonywać wdechów, prowadź sam masaż serca bez przerw.",
   "choking_desc": "Pochyl poszkodowanego do przodu. Wykonaj do 5 mocnych uderzeń w okolicę międzyłopatkową. Jeśli to nie pomoże, wykonaj do 5 uciśnięć nadbrzusza (rękoczyn Heimlicha).",
   "bleeding_desc": "Zastosuj natychmiastowy, bezpośredni ucisk na miejsce krwawienia jałowym opatrunkiem lub czystym materiałem. Unieś zranioną kończynę powyżej poziomu serca, jeśli to możliwe. Nie zdejmuj przesiąkniętych opatrunków — dokładaj kolejne.",
-  "unconscious_desc": "Udrożnij drogi oddechowe odchylając głowę do tyłu i unosząc żuchwę. Sprawdź oddech przez 10 sekund (widzę, słyszę, czuję). Jeśli oddycha prawidłowo — ułóż w pozycji bocznej ustalonej. Jeśli nie oddycha — natychmiast rozpocznij RKO."
+  "unconscious_desc": "Udrożnij drogi oddechowe odchylając głowę do tyłu i unosząc żuchwę. Sprawdź oddech przez 10 sekund (widzę, słyszę, czuję). Jeśli oddycha prawidłowo — ułóż w pozycji bocznej ustalonej. Jeśli nie oddycha — natychmiast rozpocznij RKO.",
+  "back_home": "← PIERWSZA POMOC // CENTRUM",
+  "legal_label": "PRAWO",
+  "privacy_title": "Polityka prywatności",
+  "privacy_intro": "Niniejsza polityka wyjaśnia, jak przetwarzane są informacje podczas korzystania z Centrum Pierwszej Pomocy.",
+  "privacy_body_one": "Panel służy do udzielania natychmiastowych wskazówek ratunkowych i nie gromadzi ani nie przechowuje dokumentacji medycznej użytkowników.",
+  "privacy_body_two": "Anonimowe dane telemetryczne oraz cookies analityczne (Google Analytics 4 / GTM) są wykorzystywane wyłącznie do monitorowania wydajności i stabilności działania aplikacji w sytuacjach awaryjnych.",
+  "terms_title": "Warunki korzystania",
+  "terms_intro": "Niniejsze warunki opisują zasady korzystania z systemu LifeLine Voice.",
+  "terms_body_one": "Interfejs udostępnia zautomatyzowane instrukcje ratunkowe. Nie zastępuje dyspozytorów numeru alarmowego ani wykwalifikowanego personelu medycznego.",
+  "terms_body_two": "W każdej sytuacji bezpośredniego zagrożenia życia natychmiast zadzwoń pod numer alarmowy 112 i postępuj zgodnie z poleceniami dyspozytora medycznego."
 }

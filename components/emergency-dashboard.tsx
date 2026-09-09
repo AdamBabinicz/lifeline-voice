@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import enDict from "@/locales/en.json";
 import plDict from "@/locales/pl.json";
+import { useLanguage } from "@/components/language-provider";
 
 export type Locale = "pl" | "en";
 
@@ -163,7 +164,7 @@ export function EmergencyDashboard() {
   const [selected, setSelected] = useState<string | null>(null);
   const [metronomeActive, setMetronomeActive] = useState(false);
   const [beat, setBeat] = useState(false);
-  const [locale, setLocale] = useState<Locale>("pl");
+  const { locale, toggleLocale: toggleLocaleFromProvider } = useLanguage();
   const [isListening, setIsListening] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
   const [wakeLockActive, setWakeLockActive] = useState(false);
@@ -560,7 +561,7 @@ export function EmergencyDashboard() {
   }, [isListening, locale, primeAudioContext]);
 
   const toggleLocale = () => {
-    setLocale((prev) => (prev === "pl" ? "en" : "pl"));
+    toggleLocaleFromProvider();
   };
 
   const toggleTheme = () => {
@@ -778,14 +779,14 @@ export function EmergencyDashboard() {
           <nav className="flex flex-wrap items-center gap-4 sm:gap-6 font-bold uppercase tracking-wider">
             <Link
               className="hover:text-primary transition-colors cursor-pointer"
-              href="/privacy"
+              href={locale === "pl" ? "/polityka-prywatnosci" : "/privacy"}
             >
               {t.privacy_policy}
             </Link>
             <span className="text-muted-foreground">/</span>
             <Link
               className="hover:text-primary transition-colors cursor-pointer"
-              href="/terms"
+              href={locale === "pl" ? "/warunki-korzystania" : "/terms"}
             >
               {t.terms_of_service}
             </Link>

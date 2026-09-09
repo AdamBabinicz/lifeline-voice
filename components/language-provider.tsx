@@ -14,7 +14,9 @@ export type Locale = "pl" | "en";
 import en from "@/locales/en.json";
 import pl from "@/locales/pl.json";
 
-const translations: Record<Locale, typeof pl> = {
+// Jedyny autorytatywny obiekt tłumaczeń w aplikacji — eksportowany,
+// żeby /privacy i /terms mogły czytać z tego samego źródła co provider.
+export const translations: Record<Locale, typeof pl> = {
   pl,
   en,
 };
