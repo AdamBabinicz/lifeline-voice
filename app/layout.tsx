@@ -91,21 +91,36 @@ export const metadata: Metadata = {
     siteName: "LifeLine Voice",
     images: [
       {
+        url: "/images/1.png",
+        width: 1200,
+        height: 630,
+        type: "image/png",
+        alt: "LifeLine Voice – Emergency Response Command",
+      },
+      {
         url: "/web-app-manifest-512x512.png",
         width: 512,
         height: 512,
-        alt: "LifeLine Voice – Emergency Response Command",
+        type: "image/png",
+        alt: "LifeLine Voice Icon",
       },
     ],
     locale: "pl_PL",
-    alternateLocale: "en_US",
+    alternateLocale: ["en_US"],
     type: "website",
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: META_TITLE,
     description: META_DESCRIPTION,
-    images: ["/web-app-manifest-512x512.png"],
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "LifeLine Voice – Emergency Response Command",
+      },
+    ],
   },
   manifest: "/site.webmanifest",
   appleWebApp: {
@@ -265,7 +280,6 @@ export default function RootLayout({
               src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
               height="0"
               width="0"
-              style={{ display: "none", visibility: "hidden" }}
             />
           </noscript>
         )}
