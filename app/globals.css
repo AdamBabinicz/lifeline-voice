@@ -114,6 +114,7 @@
 .touch-action-manipulation {
   touch-action: manipulation;
 }
+
 .animate-wave {
   animation: emergency-wave 0.9s ease-in-out infinite;
   transform-origin: center;
@@ -123,26 +124,32 @@
   height: clamp(1rem, 3vh, 1.5rem);
   animation-delay: 0ms;
 }
+
 .wave-bar-1 {
   height: clamp(1.5rem, 5vh, 2.75rem);
   animation-delay: 70ms;
 }
+
 .wave-bar-2 {
   height: clamp(2rem, 7vh, 4rem);
   animation-delay: 140ms;
 }
+
 .wave-bar-3 {
   height: clamp(1.2rem, 4vh, 2rem);
   animation-delay: 210ms;
 }
+
 .wave-bar-4 {
   height: clamp(1.8rem, 6vh, 3.5rem);
   animation-delay: 280ms;
 }
+
 .wave-bar-5 {
   height: clamp(1.4rem, 4.5vh, 2.5rem);
   animation-delay: 350ms;
 }
+
 .wave-bar-6 {
   height: clamp(1.6rem, 5.5vh, 3rem);
   animation-delay: 420ms;
@@ -155,6 +162,13 @@
     @apply border-border outline-ring/50;
     box-sizing: border-box;
   }
+
+  button,
+  [role="button"],
+  a {
+    cursor: pointer;
+  }
+
   html {
     max-width: 100vw;
     overflow-x: hidden;
@@ -175,6 +189,7 @@
     overflow-wrap: anywhere;
   }
 }
+
 @layer utilities {
   header .status-container,
   header [role="banner"] {
