@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Zap,
   Languages,
@@ -150,6 +150,13 @@ export function StatusHeader({
   onTheme,
   isListening,
 }: any) {
+  // Bezpiecznik hydracji: sprawdzamy, czy komponent zamontował się w przeglądarce
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
   return (
     <header className="border-b border-border/70 bg-background/95 sticky top-0 z-50">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
@@ -200,8 +207,12 @@ export function StatusHeader({
             variant="outline"
             size="icon"
             className="size-8 sm:size-9 shrink-0"
+            aria-label="Przełącz motyw"
           >
-            {theme === "dark" ? (
+            {/* Ochrona przed błędem hydracji serwer-klient */}
+            {!hasMounted ? (
+              <span className="size-3.5 sm:size-4 inline-block" />
+            ) : theme === "dark" ? (
               <Sun className="size-3.5 sm:size-4" />
             ) : (
               <Moon className="size-3.5 sm:size-4" />
@@ -219,8 +230,6 @@ export function ProtocolCard({ protocol, selected, label, onSelect }: any) {
   return (
     <Button
       onClick={onSelect}
-      // KLUCZOWA POPRAWKA: Dynamiczny wariant przycisku
-      // variant="default" dla wybranego wymusza bg-primary i biały tekst w Dark Mode
       variant={selected ? "default" : "outline"}
       className={`h-auto min-h-[6.5rem] sm:min-h-[10rem] w-full justify-between items-start rounded-none border-2 p-3 sm:p-5 text-left font-mono transition-all ${
         selected
