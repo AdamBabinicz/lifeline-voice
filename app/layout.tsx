@@ -71,8 +71,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pl" suppressHydrationWarning>
-      <head>
-        {/* GOOGLE CONSENT MODE V2 DEFAULT INITIALIZATION (BEFORE INTERACTIVE) */}
+      <body
+        className={`${inter.variable} ${geistMono.variable} font-sans antialiased`}
+        suppressHydrationWarning
+      >
+        {/* GOOGLE CONSENT MODE V2 DEFAULT INITIALIZATION */}
         <Script
           id="google-consent-mode-default"
           strategy="beforeInteractive"
@@ -106,7 +109,7 @@ export default function RootLayout({
           }}
         />
 
-        {/* GOOGLE TAG MANAGER (OPTIONAL CONTAINER) */}
+        {/* GOOGLE TAG MANAGER */}
         {GTM_ID && (
           <Script
             id="gtm-loader"
@@ -123,7 +126,7 @@ export default function RootLayout({
           />
         )}
 
-        {/* GOOGLE ANALYTICS 4 (DIRECT MEASUREMENT ID) */}
+        {/* GOOGLE ANALYTICS 4 */}
         {GA4_ID && (
           <>
             <Script
@@ -146,11 +149,7 @@ export default function RootLayout({
             />
           </>
         )}
-      </head>
-      <body
-        className={`${inter.variable} ${geistMono.variable} font-sans antialiased`}
-        suppressHydrationWarning
-      >
+
         {/* GTM NOSCRIPT FALLBACK */}
         {GTM_ID && (
           <noscript>
