@@ -63,6 +63,8 @@ export function EmergencyDashboard() {
   const wakeLockRef = useRef<any>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const lastSpokenTextRef = useRef<string | null>(null);
+  const isSpeakingRef = useRef<boolean>(false);
+  const isThinkingRef = useRef<boolean>(false);
   const isCprContext = selected === "cpr";
 
   const t = translations[locale];
@@ -124,7 +126,7 @@ export function EmergencyDashboard() {
     }
   }, []);
 
-  // Synteza mowy (TTS)
+  // Synteza mowy (TTS) z zabezpieczeniem przed sprzężeniem zwrotnym do mikrofonu
   const speakInstruction = useCallback(
     (text: string) => {
       if (typeof window === "undefined" || !("speechSynthesis" in window))
@@ -132,6 +134,7 @@ export function EmergencyDashboard() {
 
       window.speechSynthesis.cancel();
       lastSpokenTextRef.current = text;
+      isSpeakingRef.current = true;
 
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = locale === "pl" ? "pl-PL" : "en-US";
@@ -147,6 +150,17 @@ export function EmergencyDashboard() {
       if (matchedVoice) {
         utterance.voice = matchedVoice;
       }
+
+      utterance.onend = () => {
+        // Krótki bufor bezpieczeństwa (300ms) po zakończeniu mowy na wyciszenie echa w pokoju
+        setTimeout(() => {
+          isSpeakingRef.current = false;
+        }, 300);
+      };
+
+      utterance.onerror = () => {
+        isSpeakingRef.current = false;
+      };
 
       window.speechSynthesis.speak(utterance);
     },
@@ -270,13 +284,15 @@ export function EmergencyDashboard() {
   // Dynamiczne zapytanie do serwerowego asystenta AI
   const requestAiGuidance = useCallback(
     async (queryText: string) => {
+      if (isThinkingRef.current) return;
+
       setIsThinking(true);
+      isThinkingRef.current = true;
       setErrorMessage(null);
-      // KLUCZOWE: Wyłączamy zaznaczony kafelek protokołu, bo to jest porada AI!
       setSelected(null);
 
       try {
-        const response = await fetch("/api/guidance", {
+        const response = await fetch("/api/rescue-ai", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ query: queryText, locale }),
@@ -290,20 +306,21 @@ export function EmergencyDashboard() {
         } else {
           const fallback =
             locale === "pl"
-              ? "Zadbaj o bezpieczeństwo. W razie wątpliwości natychmiast wezwij 112."
-              : "Ensure the scene is safe. When in doubt, call 112 immediately.";
+              ? "1. Zadbaj o bezpieczeństwo. 2. W razie wątpliwości natychmiast wezwij 112."
+              : "1. Ensure the scene is safe. 2. When in doubt, call 112 immediately.";
           setAiGuidance(fallback);
           speakInstruction(fallback);
         }
       } catch {
         const fallback =
           locale === "pl"
-            ? "Brak połączenia z siecią. W sytuacji zagrożenia życia natychmiast wezwij 112."
-            : "No network connection. In life-threatening emergencies, call 112 immediately.";
+            ? "1. Brak połączenia z siecią. 2. W sytuacji zagrożenia życia natychmiast wezwij 112."
+            : "1. No network connection. 2. In life-threatening emergencies, call 112 immediately.";
         setAiGuidance(fallback);
         speakInstruction(fallback);
       } finally {
         setIsThinking(false);
+        isThinkingRef.current = false;
       }
     },
     [locale, speakInstruction],
@@ -312,10 +329,17 @@ export function EmergencyDashboard() {
   // Inteligentna obsługa komend głosowych
   const handleVoiceCommand = useCallback(
     (transcript: string) => {
+      // Ignoruj, gdy asystent właśnie mówi na głos przez głośnik lub przetwarza zapytanie
+      if (isSpeakingRef.current || isThinkingRef.current) {
+        return;
+      }
+
       const lower = transcript.toLowerCase().trim();
+      if (!lower || lower.length < 3) return;
+
       setLastUserQuery(transcript);
 
-      // Czy to jest prosta, krótka komenda wyboru protokołu (do 2-3 słów)?
+      // Czy to jest prosta, krótka komenda wyboru protokołu (do 3 słów)?
       const words = lower.split(/\s+/).filter(Boolean);
       const isShortCommand = words.length <= 3;
 
@@ -372,8 +396,7 @@ export function EmergencyDashboard() {
         }
       }
 
-      // Wszystkie inne zdania, pytania i sytuacje (np. "dziecko krwawi z nosa", "co robić gdy...")
-      // ZAWSZE trafiają do asystenta AI:
+      // Wszystkie inne zdania i pytania trafiają do asystenta AI
       requestAiGuidance(transcript);
     },
     [requestAiGuidance, speakInstruction, t],
@@ -397,9 +420,16 @@ export function EmergencyDashboard() {
     recognition.lang = locale === "pl" ? "pl-PL" : "en-US";
 
     recognition.onresult = (event: any) => {
+      // Ignoruj wyniki wywołane podczas mówienia syntezatora
+      if (isSpeakingRef.current || isThinkingRef.current) {
+        return;
+      }
+
       const current = event.resultIndex;
-      const transcript = event.results[current][0].transcript;
-      handleVoiceCommand(transcript);
+      const transcript = event.results[current]?.[0]?.transcript;
+      if (transcript) {
+        handleVoiceCommand(transcript);
+      }
     };
 
     recognition.onerror = (event: any) => {
