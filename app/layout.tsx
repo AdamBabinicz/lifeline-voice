@@ -163,17 +163,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pl" suppressHydrationWarning>
-      <head>
-        {/* SCHEMA.ORG STRUCTURED DATA (JSON-LD) */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-      </head>
       <body
         className={`${inter.variable} ${geistMono.variable} font-sans antialiased`}
         suppressHydrationWarning
       >
+        {/* SCHEMA.ORG STRUCTURED DATA (JSON-LD) - DIRECT IN BODY TO PREVENT HYDRATION MISMATCH */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+
         {/* GOOGLE CONSENT MODE V2 DEFAULT INITIALIZATION */}
         <Script
           id="google-consent-mode-default"
