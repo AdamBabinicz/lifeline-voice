@@ -1,4 +1,4 @@
-# LifeLine Voice — Mobile Architecture Technical Whitepaper
+# LifeLine Voice — Cross-Platform & Mobile Architecture Technical Whitepaper
 
 **Version:** 1.0 (Hackathon Prototype — AI Builders Hackathon 2026)
 **Date:** September 10, 2026
