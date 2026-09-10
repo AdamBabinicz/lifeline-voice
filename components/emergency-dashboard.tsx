@@ -249,7 +249,7 @@ export function EmergencyDashboard() {
       lastSpokenTextRef.current = text;
       isSpeakingRef.current = true;
 
-      // Fonetyczna normalizacja: lektor mówi "sto dwanaście" oraz naturalne "Po pierwsze, Po drugie..."
+      // Fonetyczna normalizacja dla polskiego i angielskiego syntezatora mowy
       let speechText = text;
       if (locale === "pl") {
         speechText = speechText
@@ -259,6 +259,17 @@ export function EmergencyDashboard() {
           .replace(/(?:^|\s)3\.\s*/g, " Po trzecie, ")
           .replace(/(?:^|\s)4\.\s*/g, " Po czwarte, ")
           .replace(/(?:^|\s)5\.\s*/g, " Po piąte, ")
+          .trim();
+      } else {
+        speechText = speechText
+          .replace(/112\/911/g, "nine one one or one one two")
+          .replace(/\b112\b/g, "one one two")
+          .replace(/\b911\b/g, "nine one one")
+          .replace(/(?:^|\s)1\.\s*/g, " Step one: ")
+          .replace(/(?:^|\s)2\.\s*/g, " Step two: ")
+          .replace(/(?:^|\s)3\.\s*/g, " Step three: ")
+          .replace(/(?:^|\s)4\.\s*/g, " Step four: ")
+          .replace(/(?:^|\s)5\.\s*/g, " Step five: ")
           .trim();
       }
 
