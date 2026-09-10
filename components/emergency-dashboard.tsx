@@ -304,16 +304,29 @@ export function EmergencyDashboard() {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
 
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(880, ctx.currentTime);
-        gain.gain.setValueAtTime(0.2, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+        // Wyrazisty, medyczny impuls akustyczny w stylu defibrylatora AED
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(800, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.05);
+
+        // Wyraźna głośność (0.7), doskonale słyszalna z głośnika telefonu
+        gain.gain.setValueAtTime(0.7, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
 
         osc.connect(gain);
         gain.connect(ctx.destination);
 
-        osc.start();
-        osc.stop(ctx.currentTime + 0.04);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.06);
+      }
+
+      // Haptyka: fizyczna wibracja smartfona w rytm uderzeń RKO
+      if (typeof window !== "undefined" && "vibrate" in navigator) {
+        try {
+          navigator.vibrate(45);
+        } catch {
+          // Ignoruj na urządzeniach bez silniczka wibracji
+        }
       }
     } catch {
       // Ignoruj
@@ -573,9 +586,18 @@ export function EmergencyDashboard() {
     if (selected === id) {
       setSelected(null);
       setAiGuidance(null);
+      setMetronomeActive(false);
     } else {
       setSelected(id);
       setAiGuidance(null);
+
+      // Automatyczny start metronomu dla RKO, wyłączenie dla pozostałych
+      if (id === "cpr") {
+        setMetronomeActive(true);
+      } else {
+        setMetronomeActive(false);
+      }
+
       const proto = protocols.find((p) => p.id === id);
       if (proto) {
         speakInstruction(proto.instruction);
@@ -640,7 +662,6 @@ export function EmergencyDashboard() {
             <div className="flex flex-col gap-4 sm:gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-4xl">
                 <div className="mb-2 sm:mb-3 flex flex-wrap items-center gap-2 sm:gap-3">
-                  {/* H2 semantyczny o identycznym wyglądzie jak dawny paragraf */}
                   <h2 className="font-mono text-[10px] sm:text-xs font-bold tracking-[0.15em] sm:tracking-[0.2em] text-primary uppercase">
                     {isThinking
                       ? t.voice_processing
@@ -673,7 +694,7 @@ export function EmergencyDashboard() {
           </div>
         </section>
 
-        {/* Sekcja wyboru protokołów ratunkowych z nagłówkiem H2 */}
+        {/* Sekcja wyboru protokołów ratunkowych */}
         <section aria-labelledby="protocols-heading" className="w-full">
           <h2 id="protocols-heading" className="sr-only">
             {locale === "pl"
