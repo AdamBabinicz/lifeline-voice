@@ -164,7 +164,7 @@ export function StatusHeader({
             <Zap className="size-4 sm:size-5 text-white" />
           </div>
           <div className="min-w-0">
-            <p className="truncate font-mono text-xs sm:text-sm font-bold tracking-[0.14em] sm:tracking-[0.18em]">
+            <p className="truncate font-mono text-xs sm:text-sm font-bold tracking-[0.14em] sm:tracking-[0.18em] text-foreground">
               {t.app_name}
             </p>
             <p className="hidden truncate text-xs text-muted-foreground sm:block">
@@ -174,18 +174,24 @@ export function StatusHeader({
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <div
-            className={`flex items-center gap-1.5 font-mono text-[10px] sm:text-xs font-bold tracking-wider whitespace-nowrap shrink-0 transition-opacity ${
-              isListening ? "opacity-100" : "opacity-30"
-            }`}
-          >
+          <div className="flex items-center gap-1.5 font-mono text-[10px] sm:text-xs font-bold tracking-wider whitespace-nowrap shrink-0">
             <span className="relative flex size-2 sm:size-2.5 shrink-0">
-              {isListening && (
-                <span className="absolute inline-flex size-full animate-ping bg-red-700 opacity-70" />
+              {isListening ? (
+                <>
+                  <span className="absolute inline-flex size-full animate-ping bg-red-700 opacity-70" />
+                  <span className="relative inline-flex size-2 sm:size-2.5 bg-red-700" />
+                </>
+              ) : (
+                <span className="relative inline-flex size-2 sm:size-2.5 rounded-full bg-zinc-400 dark:bg-zinc-600" />
               )}
-              <span className="relative inline-flex size-2 sm:size-2.5 bg-red-700" />
             </span>
-            <span className="hidden xs:inline sm:inline uppercase">
+            <span
+              className={`hidden xs:inline sm:inline uppercase ${
+                isListening
+                  ? "text-red-700 dark:text-red-400 font-black"
+                  : "text-zinc-600 dark:text-zinc-300 font-medium"
+              }`}
+            >
               {t.status_listening}
             </span>
           </div>
