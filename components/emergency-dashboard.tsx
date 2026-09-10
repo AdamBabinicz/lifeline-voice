@@ -2,9 +2,9 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useTheme } from "next-themes";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ScrollToTop } from "./scroll-to-top";
+import { Footer } from "./footer";
 import {
   StatusHeader,
   ProtocolCard,
@@ -14,7 +14,6 @@ import {
   Protocol,
 } from "@/components/rescue-elements";
 import {
-  AlertTriangle,
   CircleHelp,
   Droplets,
   HeartPulse,
@@ -27,6 +26,11 @@ import {
 import enDict from "@/locales/en.json";
 import plDict from "@/locales/pl.json";
 import { useLanguage } from "@/components/language-provider";
+import {
+  analyzeRescueQuery,
+  normalizeSpeechForTTS,
+  ProtocolId,
+} from "@/lib/rescue-engine";
 
 export type Locale = "pl" | "en";
 
@@ -36,7 +40,7 @@ export const translations = {
 };
 
 /**
- * Zapobiega wiszącym spójnikom i przyimkom na końcu linii (twarda spacja)
+ * Zapobiega wiszącym spójnikom i przyimkom na końcu linii (twarda spacja NBSP)
  */
 function preventOrphans(text: string): string {
   if (!text) return "";
@@ -46,122 +50,8 @@ function preventOrphans(text: string): string {
   );
 }
 
-/**
- * Precyzyjny silnik ratunkowy pierwszej pomocy (100% trafności bez błędów typu n-osa)
- */
-function getOfflineRescueGuidance(query: string, locale: Locale): string {
-  const q = query.toLowerCase();
-
-  if (locale === "pl") {
-    // 1. KRWOTOK Z NOSA (sprawdzany jako pierwszy, precyzyjnie)
-    if (
-      q.includes("nos") ||
-      q.includes("nosa") ||
-      q.includes("krwotok z nosa") ||
-      q.includes("krew z nosa")
-    ) {
-      return "1. Pochyl głowę poszkodowanego lekko do przodu (nigdy do tyłu!). 2. Mocno zaciśnij miękkie skrzydełka nosa przez pełne 10 minut. 3. Przyłóż zimny okład na kark lub czoło. 4. Nie pozwalaj wydmuchiwać nosa.";
-    }
-
-    // 2. UŻĄDLENIE W JAMĘ USTNĄ LUB GARDŁO (tylko całe słowa dla osy/pszczoły!)
-    const hasInsectWord =
-      /\b(osa|osy|osę|osie|pszczoła|pszczoły|pszczołę|szerszeń|szerszenia|użądlenie|użądliła|ukąszenie)\b/i.test(
-        q,
-      );
-    const hasMouthWord =
-      q.includes("język") ||
-      q.includes("gardł") ||
-      q.includes("ust") ||
-      q.includes("buzi");
-
-    if (hasInsectWord && hasMouthWord) {
-      return "1. Natychmiast wezwij 112 – użądlenie wewnątrz jamy ustnej grozi natychmiastowym uduszeniem! 2. Podaj do ssania kostkę lodu lub zimną wodę. 3. Posadź poszkodowanego pionowo. 4. Bądź gotów na RKO.";
-    }
-
-    // 3. ZWYKŁE UŻĄDLENIE (skóra, ręka, noga)
-    if (hasInsectWord) {
-      return "1. Zeskrob żądło paznokciem lub kartą (nie ściskaj pęsetą!). 2. Przyłóż zimny okład. 3. Obserwuj czy nie pojawia się duszność lub pokrzywka – jeśli tak, natychmiast dzwoń pod 112.";
-    }
-
-    // 4. KAPSUŁKI DO PRANIA / CHEMIA / POŁKNIĘCIE DETERGENTU
-    if (
-      q.includes("kulk") ||
-      q.includes("kapsuł") ||
-      q.includes("prani") ||
-      q.includes("chemia") ||
-      q.includes("detergent") ||
-      q.includes("kret") ||
-      q.includes("płyn do naczyń") ||
-      q.includes("trucizn")
-    ) {
-      return "1. BEZWZGLĘDNIE NIE WYWOŁUJ WYMIOTÓW (grozi spienieniem i zalaniem płuc). 2. Natychmiast zadzwoń pod 112 i zabezpiecz opakowanie. 3. Wypłucz usta wodą i usuń resztki żelu. 4. Posadź poszkodowanego pionowo i kontroluj oddech.";
-    }
-
-    // 5. OPARZENIA
-    if (
-      q.includes("oparzen") ||
-      q.includes("sparzy") ||
-      q.includes("wrzątek") ||
-      q.includes("gorąc")
-    ) {
-      return "1. Chłodź czystą, chłodną bieżącą wodą przez minimum 15-20 minut. 2. Zdejmij biżuterię i zegarek przed obrzękiem. 3. Załóż luźny jałowy opatrunek i nie przekłuwaj pęcherzy. 4. Rozległe oparzenia zgłoś pod 112.";
-    }
-
-    // 6. DRGAWKI / PADACZKA
-    if (
-      q.includes("drgawk") ||
-      q.includes("padaczk") ||
-      q.includes("atak") ||
-      q.includes("epilepsj")
-    ) {
-      return "1. Chroń głowę przed urazami (podłóż coś miękkiego). 2. NIE wkładaj niczego do ust i nie przytrzymuj siłą. 3. Po ustaniu drgawek ułóż na boku i wezwij 112.";
-    }
-
-    // 7. ZŁAMANIE / SKRĘCENIE
-    if (q.includes("złam") || q.includes("skręc") || q.includes("zwichn")) {
-      return "1. Unieruchom kończynę w pozycji zastanej (dwa sąsiednie stawy). 2. Przyłóż zimny okład przez tkaninę. 3. Nie próbuj nastawiać kości. 4. Udaj się na SOR lub wezwij 112.";
-    }
-
-    // 8. OGÓLNE ZAGROŻENIE ŻYCIA
-    return "1. Upewnij się, że miejsce zdarzenia jest bezpieczne. 2. Sprawdź czy poszkodowany reaguje i czy prawidłowo oddycha. 3. W każdej sytuacji nagłego zagrożenia życia natychmiast dzwoń pod 112.";
-  } else {
-    // ENGLISH RULES
-    if (q.includes("nose") || q.includes("nosebleed")) {
-      return "1. Lean the person slightly forward (never tilt back). 2. Firmly pinch the soft part of the nose for 10 minutes. 3. Apply a cold pack to the back of the neck. 4. Do not let them blow their nose.";
-    }
-
-    const hasInsectEn = /\b(bee|wasp|hornet|sting|stung)\b/i.test(q);
-    const hasMouthEn =
-      q.includes("tongue") || q.includes("mouth") || q.includes("throat");
-
-    if (hasInsectEn && hasMouthEn) {
-      return "1. Call 112/911 immediately – sting in mouth risks rapid airway obstruction! 2. Give ice cubes to suck on or cold water. 3. Keep patient sitting upright. 4. Be ready for CPR.";
-    }
-
-    if (hasInsectEn) {
-      return "1. Scrape off the stinger with a card or fingernail. 2. Apply a cold compress. 3. Monitor for breathing difficulty or swelling – if present, call 112 immediately.";
-    }
-
-    if (
-      q.includes("pod") ||
-      q.includes("laundry") ||
-      q.includes("chemical") ||
-      q.includes("detergent") ||
-      q.includes("poison")
-    ) {
-      return "1. DO NOT induce vomiting to prevent airway foaming and burns. 2. Call 112 immediately and keep the container. 3. Rinse mouth with water. 4. Keep sitting upright and monitor breathing.";
-    }
-
-    if (q.includes("burn") || q.includes("scald")) {
-      return "1. Cool with cold running tap water for 15-20 minutes. 2. Remove jewelry before swelling starts. 3. Cover loosely with a sterile dressing. 4. Do not pop blisters.";
-    }
-
-    return "1. Ensure the scene is safe. 2. Check responsiveness and breathing. 3. In any medical emergency, call 112 immediately.";
-  }
-}
-
 export function EmergencyDashboard() {
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<ProtocolId | null>(null);
   const [metronomeActive, setMetronomeActive] = useState(false);
   const [beat, setBeat] = useState(false);
   const { locale, toggleLocale: toggleLocaleFromProvider } = useLanguage();
@@ -170,6 +60,7 @@ export function EmergencyDashboard() {
   const [wakeLockActive, setWakeLockActive] = useState(false);
   const [wakeLockSupported, setWakeLockSupported] = useState(false);
   const [aiGuidance, setAiGuidance] = useState<string | null>(null);
+  const [activeTitleKey, setActiveTitleKey] = useState<string | null>(null);
   const [lastUserQuery, setLastUserQuery] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -178,17 +69,18 @@ export function EmergencyDashboard() {
   const wakeLockRef = useRef<any>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const lastSpokenTextRef = useRef<string | null>(null);
+  const lastHandledIndexRef = useRef<number>(-1);
   const isSpeakingRef = useRef<boolean>(false);
   const isThinkingRef = useRef<boolean>(false);
   const isCprContext = selected === "cpr";
 
-  const t = translations[locale];
+  const t = translations[locale] as Record<string, string>;
 
   const protocols: Protocol[] = [
     {
       id: "cpr",
       label: t.protocol_cpr,
-      instruction: t.cpr_desc,
+      instruction: t.cpr_full_guidance || t.cpr_desc,
       protocol: t.protocol_cpr,
       icon: HeartPulse,
     },
@@ -245,33 +137,11 @@ export function EmergencyDashboard() {
       if (typeof window === "undefined" || !("speechSynthesis" in window))
         return;
 
+      isSpeakingRef.current = true;
       window.speechSynthesis.cancel();
       lastSpokenTextRef.current = text;
-      isSpeakingRef.current = true;
 
-      // Fonetyczna normalizacja dla polskiego i angielskiego syntezatora mowy
-      let speechText = text;
-      if (locale === "pl") {
-        speechText = speechText
-          .replace(/\b112\b/g, "sto dwanaście")
-          .replace(/(?:^|\s)1\.\s*/g, " Po pierwsze, ")
-          .replace(/(?:^|\s)2\.\s*/g, " Po drugie, ")
-          .replace(/(?:^|\s)3\.\s*/g, " Po trzecie, ")
-          .replace(/(?:^|\s)4\.\s*/g, " Po czwarte, ")
-          .replace(/(?:^|\s)5\.\s*/g, " Po piąte, ")
-          .trim();
-      } else {
-        speechText = speechText
-          .replace(/112\/911/g, "nine one one or one one two")
-          .replace(/\b112\b/g, "one one two")
-          .replace(/\b911\b/g, "nine one one")
-          .replace(/(?:^|\s)1\.\s*/g, " Step one: ")
-          .replace(/(?:^|\s)2\.\s*/g, " Step two: ")
-          .replace(/(?:^|\s)3\.\s*/g, " Step three: ")
-          .replace(/(?:^|\s)4\.\s*/g, " Step four: ")
-          .replace(/(?:^|\s)5\.\s*/g, " Step five: ")
-          .trim();
-      }
+      const speechText = normalizeSpeechForTTS(text, locale);
 
       const utterance = new SpeechSynthesisUtterance(speechText);
       utterance.lang = locale === "pl" ? "pl-PL" : "en-US";
@@ -328,12 +198,10 @@ export function EmergencyDashboard() {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
 
-        // Wyrazisty, medyczny impuls akustyczny w stylu defibrylatora AED
         osc.type = "triangle";
         osc.frequency.setValueAtTime(800, ctx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.05);
 
-        // Wyraźna głośność (0.7), doskonale słyszalna z głośnika telefonu
         gain.gain.setValueAtTime(0.7, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
 
@@ -344,12 +212,11 @@ export function EmergencyDashboard() {
         osc.stop(ctx.currentTime + 0.06);
       }
 
-      // Haptyka: fizyczna wibracja smartfona w rytm uderzeń RKO
       if (typeof window !== "undefined" && "vibrate" in navigator) {
         try {
           navigator.vibrate(45);
         } catch {
-          // Ignoruj na urządzeniach bez silniczka wibracji
+          // Ignoruj
         }
       }
     } catch {
@@ -363,7 +230,7 @@ export function EmergencyDashboard() {
       interval = setInterval(() => {
         setBeat((prev) => !prev);
         playMetronomeBeep();
-      }, 545);
+      }, 545); // 110 BPM
     } else {
       setBeat(false);
     }
@@ -426,96 +293,86 @@ export function EmergencyDashboard() {
     };
   }, [wakeLockActive, wakeLockSupported]);
 
-  // Błyskawiczna porada medyczna z precyzyjną bazą ratunkową
-  const requestAiGuidance = useCallback(
-    async (queryText: string) => {
-      if (isThinkingRef.current) return;
-
-      setIsThinking(true);
-      isThinkingRef.current = true;
-      setErrorMessage(null);
-      setSelected(null);
-
-      const guidance = getOfflineRescueGuidance(queryText, locale);
-      setAiGuidance(guidance);
-      speakInstruction(guidance);
-
-      setIsThinking(false);
-      isThinkingRef.current = false;
-    },
-    [locale, speakInstruction],
-  );
-
   const handleVoiceCommand = useCallback(
-    (transcript: string) => {
-      if (isSpeakingRef.current || isThinkingRef.current) {
-        return;
-      }
-
+    (transcript: string, resultIndex: number) => {
       const lower = transcript.toLowerCase().trim();
       if (!lower || lower.length < 3) return;
 
-      setLastUserQuery(transcript);
+      // Jeśli to samo zdanie wywołało już procedurę, zignoruj kolejne części (brak podwójnego czytania)
+      if (resultIndex === lastHandledIndexRef.current) {
+        return;
+      }
 
-      const words = lower.split(/\s+/).filter(Boolean);
-      const isShortCommand = words.length <= 3;
+      const result = analyzeRescueQuery(transcript, locale, t);
 
-      if (isShortCommand) {
+      // Jeśli zapytanie nie pasuje do bazy ratunkowej
+      if (result.type === "unknown") {
         if (
-          lower === "rko" ||
-          lower === "cpr" ||
-          lower === "protokół rko" ||
-          lower === "masaż serca"
+          typeof window !== "undefined" &&
+          window.speechSynthesis &&
+          window.speechSynthesis.speaking
         ) {
+          return;
+        }
+        setLastUserQuery(transcript);
+        return;
+      }
+
+      // Oznacz ten indeks jako zrealizowany – dane zdanie odpali się tylko raz!
+      lastHandledIndexRef.current = resultIndex;
+
+      // BARGE-IN: Natychmiast uciszamy trwającą wypowiedź!
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+      isSpeakingRef.current = false;
+
+      setLastUserQuery(transcript);
+      setErrorMessage(null);
+
+      if (result.type === "command") {
+        if (result.command === "start_cpr") {
           setSelected("cpr");
           setAiGuidance(null);
+          setActiveTitleKey("title_cpr");
           setMetronomeActive(true);
-          speakInstruction(t.cpr_full_guidance || t.cpr_desc);
+          speakInstruction(result.spokenText);
           return;
         }
-
-        if (
-          lower === "zadławienie" ||
-          lower === "choking" ||
-          lower === "protokół zadławienie" ||
-          lower === "krztuszenie"
-        ) {
-          setSelected("choking");
-          setAiGuidance(null);
+        if (result.command === "stop_metronome") {
           setMetronomeActive(false);
-          speakInstruction(t.choking_desc);
+          speakInstruction(result.spokenText);
           return;
         }
-
-        if (
-          lower === "krwawienie" ||
-          lower === "bleeding" ||
-          lower === "protokół krwawienie" ||
-          lower === "krwotok"
-        ) {
-          setSelected("bleeding");
-          setAiGuidance(null);
-          setMetronomeActive(false);
-          speakInstruction(t.bleeding_desc);
-          return;
-        }
-
-        if (
-          lower === "nieprzytomny" ||
-          lower === "unconscious" ||
-          lower === "protokół nieprzytomny"
-        ) {
-          setSelected("unconscious");
-          setAiGuidance(null);
-          setMetronomeActive(false);
-          speakInstruction(t.unconscious_desc);
+        if (result.command === "toggle_language") {
+          toggleLocaleFromProvider();
           return;
         }
       }
 
-      requestAiGuidance(transcript);
+      if (result.type === "protocol" && result.protocolId) {
+        setSelected(result.protocolId);
+        setAiGuidance(null);
+        setActiveTitleKey(result.titleKey || null);
+        if (result.protocolId === "cpr") {
+          setMetronomeActive(true);
+        } else {
+          setMetronomeActive(false);
+        }
+        speakInstruction(result.spokenText);
+        return;
+      }
+
+      if (result.type === "guidance") {
+        setSelected(null);
+        setMetronomeActive(false);
+        setAiGuidance(result.displayText);
+        setActiveTitleKey(result.titleKey || null);
+        speakInstruction(result.spokenText);
+        return;
+      }
     },
-    [requestAiGuidance, speakInstruction, t],
+    [locale, speakInstruction, t, toggleLocaleFromProvider],
   );
 
   useEffect(() => {
@@ -531,18 +388,15 @@ export function EmergencyDashboard() {
 
     const recognition = new SpeechRecognitionClass();
     recognition.continuous = true;
-    recognition.interimResults = false;
+    recognition.interimResults = true;
     recognition.lang = locale === "pl" ? "pl-PL" : "en-US";
 
     recognition.onresult = (event: any) => {
-      if (isSpeakingRef.current || isThinkingRef.current) {
-        return;
-      }
-
-      const current = event.resultIndex;
-      const transcript = event.results[current]?.[0]?.transcript;
-      if (transcript) {
-        handleVoiceCommand(transcript);
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i]?.[0]?.transcript;
+        if (transcript) {
+          handleVoiceCommand(transcript, i);
+        }
       }
     };
 
@@ -571,11 +425,7 @@ export function EmergencyDashboard() {
     primeAudioContext();
 
     if (!recognitionRef.current) {
-      setErrorMessage(
-        locale === "pl"
-          ? "Twoja przeglądarka nie obsługuje rozpoznawania mowy."
-          : "Your browser does not support Speech Recognition.",
-      );
+      setErrorMessage(t.voice_error);
       return;
     }
 
@@ -595,7 +445,7 @@ export function EmergencyDashboard() {
         setIsListening(false);
       }
     }
-  }, [isListening, locale, primeAudioContext]);
+  }, [isListening, primeAudioContext, t.voice_error]);
 
   const toggleLocale = () => {
     toggleLocaleFromProvider();
@@ -605,17 +455,18 @@ export function EmergencyDashboard() {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
-  const handleProtocolSelect = (id: string) => {
+  const handleProtocolSelect = (id: ProtocolId) => {
     primeAudioContext();
     if (selected === id) {
       setSelected(null);
       setAiGuidance(null);
+      setActiveTitleKey(null);
       setMetronomeActive(false);
     } else {
       setSelected(id);
       setAiGuidance(null);
+      setActiveTitleKey(`title_${id}`);
 
-      // Automatyczny start metronomu dla RKO, wyłączenie dla pozostałych
       if (id === "cpr") {
         setMetronomeActive(true);
       } else {
@@ -624,7 +475,9 @@ export function EmergencyDashboard() {
 
       const proto = protocols.find((p) => p.id === id);
       if (proto) {
-        speakInstruction(proto.instruction);
+        const spokenKey =
+          id === "cpr" ? "cpr_full_guidance_spoken" : `${id}_desc_spoken`;
+        speakInstruction(t[spokenKey] || proto.instruction);
       }
     }
   };
@@ -634,17 +487,14 @@ export function EmergencyDashboard() {
     if (!isCprContext && !metronomeActive) {
       setSelected("cpr");
       setAiGuidance(null);
+      setActiveTitleKey("title_cpr");
       setMetronomeActive(true);
-      speakInstruction(t.cpr_full_guidance || t.cpr_desc);
+      speakInstruction(
+        t.cpr_full_guidance_spoken || t.cpr_full_guidance || t.cpr_desc,
+      );
       return;
     }
     setMetronomeActive((prev) => !prev);
-  };
-
-  const openCookiePreferences = () => {
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new Event("open-cookie-settings"));
-    }
   };
 
   const currentInstruction = isThinking
@@ -655,6 +505,12 @@ export function EmergencyDashboard() {
         ? protocols.find((p) => p.id === selected)?.instruction ||
           t.select_protocol
         : t.select_protocol;
+
+  const currentBadgeTitle = isThinking
+    ? t.voice_processing
+    : activeTitleKey && t[activeTitleKey]
+      ? t[activeTitleKey]
+      : t.system_ready;
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-mono selection:bg-primary selection:text-primary-foreground">
@@ -669,7 +525,7 @@ export function EmergencyDashboard() {
 
       <main className="mx-auto flex max-w-7xl flex-col gap-4 sm:gap-6 px-3 sm:px-6 py-4 sm:py-8 pb-8 sm:pb-12 lg:px-8 flex-1 w-full">
         <section
-          aria-label="Główna instrukcja ratunkowa"
+          aria-label={t.app_name}
           className="relative overflow-hidden border border-border bg-card"
         >
           <div className="absolute inset-y-0 left-0 w-1 bg-primary z-10" />
@@ -687,17 +543,7 @@ export function EmergencyDashboard() {
               <div className="max-w-4xl">
                 <div className="mb-2 sm:mb-3 flex flex-wrap items-center gap-2 sm:gap-3">
                   <h2 className="font-mono text-[10px] sm:text-xs font-bold tracking-[0.15em] sm:tracking-[0.2em] text-primary uppercase">
-                    {isThinking
-                      ? t.voice_processing
-                      : aiGuidance
-                        ? locale === "pl"
-                          ? "PORADA ASYSTENTA AI"
-                          : "AI ASSISTANT GUIDANCE"
-                        : selected
-                          ? locale === "pl"
-                            ? "AKTYWNY PROTOKÓŁ"
-                            : "ACTIVE PROTOCOL"
-                          : t.system_ready}
+                    {currentBadgeTitle}
                   </h2>
                   <Button
                     variant="ghost"
@@ -721,9 +567,7 @@ export function EmergencyDashboard() {
         {/* Sekcja wyboru protokołów ratunkowych */}
         <section aria-labelledby="protocols-heading" className="w-full">
           <h2 id="protocols-heading" className="sr-only">
-            {locale === "pl"
-              ? "Protokoły pierwszej pomocy"
-              : "First Aid Emergency Protocols"}
+            {t.select_protocol}
           </h2>
           <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
             {protocols.map((protocol) => (
@@ -732,7 +576,7 @@ export function EmergencyDashboard() {
                 protocol={protocol}
                 selected={selected === protocol.id && !aiGuidance}
                 label={protocol.label}
-                onSelect={() => handleProtocolSelect(protocol.id)}
+                onSelect={() => handleProtocolSelect(protocol.id as ProtocolId)}
               />
             ))}
           </div>
@@ -743,9 +587,7 @@ export function EmergencyDashboard() {
           className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-3"
         >
           <h2 id="tools-heading" className="sr-only">
-            {locale === "pl"
-              ? "Narzędzia wspomagające ratownika"
-              : "Rescuer Support Tools"}
+            {t.app_subtitle}
           </h2>
 
           <div className="space-y-4">
@@ -809,43 +651,12 @@ export function EmergencyDashboard() {
             className="rounded-none font-mono text-xs sm:text-sm font-bold cursor-pointer"
           >
             <ShieldCheck className="mr-2 size-4 text-primary" />
-            {wakeLockActive
-              ? locale === "pl"
-                ? "EKRAN AKTYWNY"
-                : "SCREEN ACTIVE"
-              : t.keep_screen_on}
+            {wakeLockActive ? t.keep_screen_on : t.keep_screen_on}
           </Button>
         </div>
       </main>
 
-      <footer className="border-t border-border bg-background pb-16 sm:pb-6">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-          <p className="max-w-xl leading-relaxed">{t.footer_disclaimer}</p>
-          <nav className="flex flex-wrap items-center gap-4 sm:gap-6 font-bold uppercase tracking-wider">
-            <Link
-              className="hover:text-primary transition-colors cursor-pointer"
-              href={locale === "pl" ? "/polityka-prywatnosci" : "/privacy"}
-            >
-              {t.privacy_policy}
-            </Link>
-            <span className="text-muted-foreground">/</span>
-            <Link
-              className="hover:text-primary transition-colors cursor-pointer"
-              href={locale === "pl" ? "/warunki-korzystania" : "/terms"}
-            >
-              {t.terms_of_service}
-            </Link>
-            <span className="text-muted-foreground">/</span>
-            <button
-              type="button"
-              onClick={openCookiePreferences}
-              className="hover:text-primary transition-colors uppercase cursor-pointer underline decoration-primary/50 underline-offset-4"
-            >
-              {t.cookie_settings}
-            </button>
-          </nav>
-        </div>
-      </footer>
+      <Footer />
 
       <a
         href="tel:112"

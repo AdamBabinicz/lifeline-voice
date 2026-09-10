@@ -43,14 +43,64 @@
   "cookies_customize": "USTAWIENIA",
   "cookies_save": "ZAPISZ WYBÓR",
   "cookies_close": "ZAMKNIJ",
+
+  "title_cpr": "RESUSCYTACJA KRĄŻENIOWO-ODDECHOWA (RKO)",
+  "title_choking": "ZADŁAWIENIE / KRZTUSZENIE",
+  "title_bleeding": "MASYWNY KRWOTOK",
+  "title_unconscious": "UTRATA PRZYTOMNOŚCI",
+  "title_fall_head_trauma": "UPADEK DZIECKA / URAZ GŁOWY",
+  "title_chemical_ingestion": "POŁKNIĘCIE CHEMII / DETERGENTU",
+  "title_insect_mouth": "UŻĄDLENIE W JAMĘ USTNĄ",
+  "title_insect_skin": "UŻĄDLENIE OWADA (SKÓRA)",
+  "title_burn": "CIĘŻKIE OPARZENIE TERMICZNE",
+  "title_seizure": "ATAK PADACZKI / DRGAWKI",
+  "title_fracture": "ZŁAMANIE / ZWICHNIĘCIE",
+  "title_nosebleed": "KRWOTOK Z NOSA",
+  "title_general_emergency": "ZAGROŻENIE ŻYCIA",
+
   "cpr_ratio": "30 UCIŚNIĘĆ : 2 ODDECHY",
   "cpr_depth": "GŁĘBOKOŚĆ: 5-6 CM",
   "cpr_rate": "TEMPO: 100-120 / MIN",
   "cpr_desc": "Ułóż dłonie na środku klatki piersiowej. Uciskaj mocno i szybko na głębokość 5-6 cm.",
-  "cpr_full_guidance": "Ułóż dłonie na środku klatki piersiowej. Wyprostuj ramiona w łokciach. Uciskaj mocno na głębokość 5-6 cm w rytm metronomu. Po 30 uciśnięciach wykonaj 2 wdechy ratownicze. Jeśli nie możesz wykonywać wdechów, prowadź sam masaż serca bez przerw.",
+  "cpr_full_guidance": "1. Ułóż dłonie na środku klatki piersiowej. 2. Wyprostuj ramiona w łokciach. 3. Uciskaj na głębokość 5-6 cm w rytm 110 BPM. 4. Po 30 uciśnięciach wykonaj 2 wdechy lub prowadź sam masaż ciągły.",
+  "cpr_full_guidance_spoken": "Po pierwsze: Ułóż dłonie na środku klatki piersiowej. Po drugie: Wyprostuj ramiona w łokciach. Po trzecie: Uciskaj mocno na głębokość pięciu do sześciu centymetrów w rytm metronomu. Po czwarte: Po trzydziestu uciśnięciach wykonaj dwa wdechy lub prowadź sam ciągły masaż serca.",
+
   "choking_desc": "Pochyl poszkodowanego do przodu. Wykonaj do 5 mocnych uderzeń w okolicę międzyłopatkową. Jeśli to nie pomoże, wykonaj do 5 uciśnięć nadbrzusza (rękoczyn Heimlicha).",
+  "choking_desc_spoken": "Po pierwsze: Pochyl poszkodowanego mocno do przodu. Po drugie: Wykonaj do pięciu mocnych uderzeń dłonią między łopatki. Po trzecie: Jeśli to nie pomoże, stań za nim i wykonaj do pięciu uciśnięć nadbrzusza, czyli rękoczyn Hajmliha. Po czwarte: Jeśli straci przytomność, natychmiast dzwoń pod sto dwanaście i zacznij er-ka-o.",
+
   "bleeding_desc": "Zastosuj natychmiastowy, bezpośredni ucisk na miejsce krwawienia jałowym opatrunkiem lub czystym materiałem. Unieś zranioną kończynę powyżej poziomu serca, jeśli to możliwe. Nie zdejmuj przesiąkniętych opatrunków — dokładaj kolejne.",
+  "bleeding_desc_spoken": "Po pierwsze: Zastosuj natychmiastowy, mocny ucisk bezpośrednio na ranę czystym materiałem lub opatrunkiem. Po drugie: Unieś zranioną kończynę powyżej serca. Po trzecie: Nie zdejmuj przesiąkniętych opatrunków, dokładaj kolejne warstwy na wierzch. Po czwarte: Przy silnym krwotoku tętniczym natychmiast wezwij sto dwanaście.",
+
   "unconscious_desc": "Udrożnij drogi oddechowe odchylając głowę do tyłu i unosząc żuchwę. Sprawdź oddech przez 10 sekund (widzę, słyszę, czuję). Jeśli oddycha prawidłowo — ułóż w pozycji bocznej ustalonej. Jeśli nie oddycha — natychmiast rozpocznij RKO.",
+  "unconscious_desc_spoken": "Po pierwsze: Udrożnij drogi oddechowe, odchylając głowę poszkodowanego do tyłu i unosząc żuchwę. Po drugie: Sprawdź oddech przez dziesięć sekund: patrz na klatkę, słuchaj i wyczuwaj powietrze. Po trzecie: Jeśli oddycha prawidłowo, ułóż go w pozycji bocznej ustalonej. Po czwarte: Jeśli brak prawidłowego oddechu, natychmiast wezwij sto dwanaście i rozpocznij er-ka-o.",
+
+  "guidance_fall_head_trauma": "1. Nie podnoś gwałtownie i stabilizuj głowę oraz szyję. 2. Natychmiast wezwij 112, jeśli wystąpiły: utrata przytomności, wymioty, wiotkość lub nadmierna senność. 3. Przyłóż chłodny okład na guza. 4. Obserwuj zachowanie dziecka przez 24 godziny.",
+  "guidance_fall_head_trauma_spoken": "Po pierwsze: Nie podnoś dziecka gwałtownie, zabezpiecz i stabilizuj głowę oraz odcinek szyjny. Po drugie: Natychmiast dzwoń pod sto dwanaście, jeśli wystąpiła utrata przytomności, wymioty, brak płaczu, wiotkość lub nienaturalna senność. Po trzecie: Przyłóż chłodny okład przez tkaninę na powstałego guza. Po czwarte: Obserwuj zachowanie dziecka przez kolejne dwadzieścia cztery godziny.",
+
+  "guidance_chemical_ingestion": "1. BEZWZGLĘDNIE NIE WYWOŁUJ WYMIOTÓW (grozi spienieniem i zalaniem płuc). 2. Natychmiast zadzwoń pod 112 i zabezpiecz opakowanie. 3. Wypłucz usta wodą i usuń resztki żelu. 4. Posadź poszkodowanego pionowo i kontroluj oddech.",
+  "guidance_chemical_ingestion_spoken": "Po pierwsze: Bezwzględnie nie wywołuj wymiotów! Grozi to spienieniem detergentu, poparzeniem przełyku i zalaniem płuc. Po drugie: Natychmiast zadzwoń pod sto dwanaście i zabezpiecz oryginalne opakowanie substancji. Po trzecie: Wypłucz jamę ustną wodą i delikatnie usuń resztki preparatu. Po czwarte: Posadź poszkodowanego pionowo i stale kontroluj oddech.",
+
+  "guidance_insect_mouth": "1. Natychmiast wezwij 112 – użądlenie wewnątrz jamy ustnej grozi natychmiastowym uduszeniem! 2. Podaj do ssania kostkę lodu lub zimną wodę. 3. Posadź poszkodowanego pionowo. 4. Bądź gotów na RKO.",
+  "guidance_insect_mouth_spoken": "Po pierwsze: Natychmiast wezwij sto dwanaście! Użądlenie wewnątrz jamy ustnej lub gardła grozi obrzękiem i uduszeniem w ciągu kilkudziesięciu sekund! Po drugie: Podaj do ssania kostkę lodu lub bardzo zimną wodę, aby opóźnić narastanie obrzęku. Po trzecie: Posadź poszkodowanego pionowo. Po czwarte: Stale obserwuj drożność dróg oddechowych i bądź gotów na rozpoczęcie er-ka-o.",
+
+  "guidance_insect_skin": "1. Zeskrob żądło paznokciem lub kartą (nie ściskaj pęsetą!). 2. Przyłóż zimny okład. 3. Obserwuj czy nie pojawia się duszność lub pokrzywka – jeśli tak, natychmiast dzwoń pod 112.",
+  "guidance_insect_skin_spoken": "Po pierwsze: Zeskrob żądło brzegiem karty płatniczej lub paznokciem. Nie ściskaj żądła pęsetą ani palcami, bo wstrzykniesz resztę jadu. Po drugie: Przyłóż zimny okład na miejsce użądlenia. Po trzecie: Obserwuj poszkodowanego. W razie duszności, obrzęku twarzy lub osłabienia natychmiast dzwoń pod sto dwanaście.",
+
+  "guidance_burn": "1. Chłodź czystą, chłodną bieżącą wodą przez minimum 15-20 minut. 2. Zdejmij biżuterię i zegarek przed obrzękiem. 3. Załóż luźny jałowy opatrunek i nie przekłuwaj pęcherzy. 4. Rozległe oparzenia zgłoś pod 112.",
+  "guidance_burn_spoken": "Po pierwsze: Chłodź oparzone miejsce czystą, chłodną bieżącą wodą przez pełne piętnaście do dwudziestu minut. Po drugie: Natychmiast zdejmij pierścionki, zegarek i ciasną odzież, zanim pojawi się masywny obrzęk tkanek. Po trzecie: Załóż luźny, jałowy opatrunek i pod żadnym pozorem nie przekłuwaj pęcherzy. Po czwarte: Przy oparzeniach twarzy, dróg oddechowych lub dużych powierzchni ciała natychmiast wezwij sto dwanaście.",
+
+  "guidance_seizure": "1. Chroń głowę przed urazami (podłóż coś miękkiego). 2. NIE wkładaj niczego do ust i nie przytrzymuj siłą. 3. Po ustaniu drgawek ułóż na boku i wezwij 112.",
+  "guidance_seizure_spoken": "Po pierwsze: Zabezpiecz głowę przed uderzeniami, podkładając pod nią zwiniętą bluzę lub coś miękkiego. Po drugie: Bezwzględnie nie wkładaj niczego między zęby i nie powstrzymuj drgawek na siłę. Po trzecie: Usuń niebezpieczne przedmioty z otoczenia. Po czwarte: Po ustaniu drgawek udrożnij drogi oddechowe, ułóż poszkodowanego w pozycji bocznej ustalonej i wezwij sto dwanaście.",
+
+  "guidance_fracture": "1. Unieruchom kończynę w pozycji zastanej (dwa sąsiednie stawy). 2. Przyłóż zimny okład przez tkaninę. 3. Nie próbuj nastawiać kości. 4. Udaj się na SOR lub wezwij 112.",
+  "guidance_fracture_spoken": "Po pierwsze: Unieruchom zranioną kończynę dokładnie w takiej pozycji, w jakiej się znajduje, obejmując staw powyżej i staw poniżej urazu. Po drugie: Przyłóż zimny okład owinięty w czystą tkaninę, aby zmniejszyć obrzęk i ból. Po trzecie: Nie próbuj samodzielnie nastawiać kości ani prostować kończyny. Po czwarte: Zabezpiecz poszkodowanego i wezwij sto dwanaście lub udaj się na szpitalny oddział ratunkowy.",
+
+  "guidance_nosebleed": "1. Pochyl głowę poszkodowanego lekko do przodu (nigdy do tyłu!). 2. Mocno zaciśnij miękkie skrzydełka nosa przez pełne 10 minut. 3. Przyłóż zimny okład na kark lub czoło. 4. Nie pozwalaj wydmuchiwać nosa.",
+  "guidance_nosebleed_spoken": "Po pierwsze: Pochyl głowę poszkodowanego lekko do przodu, pod żadnym pozorem nie odchylaj głowy do tyłu, aby krew nie spływała do żołądka i płuc. Po drugie: Mocno zaciśnij miękkie skrzydełka nosa dwoma palcami przez pełne dziesięć minut bez przerywania. Po trzecie: Połóż chłodny okład na kark lub nasadę nosa. Po czwarte: Po zatamowaniu krwawienia nie pozwalaj wydmuchiwać nosa.",
+
+  "guidance_general_emergency": "1. Upewnij się, że miejsce zdarzenia jest bezpieczne. 2. Sprawdź czy poszkodowany reaguje i czy prawidłowo oddycha. 3. W każdej sytuacji nagłego zagrożenia życia natychmiast dzwoń pod 112.",
+  "guidance_general_emergency_spoken": "Po pierwsze: Zadbaj o bezpieczeństwo własne i poszkodowanego. Po drugie: Sprawdź reakcję na głos i dotyk oraz skontroluj oddech. Po trzecie: W każdej sytuacji bezpośredniego zagrożenia życia natychmiast wybierz numer sto dwanaście.",
+
   "back_home": "← PIERWSZA POMOC // CENTRUM",
   "legal_label": "PRAWO",
   "privacy_title": "Polityka prywatności",

@@ -43,14 +43,64 @@
   "cookies_customize": "CUSTOMIZE",
   "cookies_save": "SAVE PREFERENCES",
   "cookies_close": "CLOSE",
+
+  "title_cpr": "CARDIOPULMONARY RESUSCITATION (CPR)",
+  "title_choking": "CHOKING / SEVERE OBSTRUCTION",
+  "title_bleeding": "MASSIVE ARTERIAL BLEEDING",
+  "title_unconscious": "UNRESPONSIVE / UNCONSCIOUS",
+  "title_fall_head_trauma": "PEDIATRIC FALL / HEAD TRAUMA",
+  "title_chemical_ingestion": "CHEMICAL / DETERGENT INGESTION",
+  "title_insect_mouth": "INSECT STING IN MOUTH OR THROAT",
+  "title_insect_skin": "INSECT STING (SKIN)",
+  "title_burn": "SEVERE THERMAL BURN",
+  "title_seizure": "EPILEPTIC SEIZURE / CONVULSIONS",
+  "title_fracture": "FRACTURE / BONE DISLOCATION",
+  "title_nosebleed": "SEVERE NOSEBLEED",
+  "title_general_emergency": "LIFE-THREATENING EMERGENCY",
+
   "cpr_ratio": "30 COMPRESSIONS : 2 BREATHS",
   "cpr_depth": "DEPTH: 5-6 CM",
   "cpr_rate": "RATE: 100-120 / MIN",
   "cpr_desc": "Place hands in the center of the chest. Push hard and fast at a depth of 5-6 cm.",
-  "cpr_full_guidance": "Place your hands in the center of the chest. Keep your arms straight at the elbows. Push hard and fast to a depth of 5-6 cm in sync with the metronome. After 30 compressions, deliver 2 rescue breaths. If untrained or unwilling to give breaths, continue continuous chest compressions.",
+  "cpr_full_guidance": "1. Place hands in the center of the chest. 2. Lock your elbows straight. 3. Compress hard and fast to a depth of 5-6 cm at 110 BPM. 4. After 30 compressions give 2 rescue breaths, or continue hands-only compressions.",
+  "cpr_full_guidance_spoken": "Step one: Place your hands in the center of the chest. Step two: Lock your elbows straight. Step three: Push hard and fast to a depth of five to six centimeters in rhythm with the metronome. Step four: After thirty compressions give two rescue breaths, or continue hands-only chest compressions without stopping.",
+
   "choking_desc": "Lean the patient forward. Deliver up to 5 sharp back blows between the shoulder blades. If ineffective, deliver up to 5 abdominal thrusts (Heimlich maneuver).",
+  "choking_desc_spoken": "Step one: Lean the patient firmly forward. Step two: Deliver up to five sharp back blows between the shoulder blades with the heel of your hand. Step three: If ineffective, stand behind them and perform up to five abdominal thrusts, the Heimlich maneuver. Step four: If the person collapses, call nine one one or one one two immediately and start C P R.",
+
   "bleeding_desc": "Apply immediate, direct pressure to the wound with a sterile dressing or clean cloth. Elevate the injured limb above heart level if possible. Do not remove soaked dressings — add more layers on top.",
+  "bleeding_desc_spoken": "Step one: Apply immediate, firm pressure directly onto the wound with a clean cloth or sterile dressing. Step two: Elevate the injured limb above heart level if possible. Step three: Never remove soaked dressings, add fresh layers directly on top. Step four: For severe arterial bleeding, call nine one one or one one two immediately.",
+
   "unconscious_desc": "Open the airway by tilting the head back and lifting the chin. Check for normal breathing for 10 seconds (look, listen, feel). If breathing normally — place in the recovery position. If not breathing — begin CPR immediately.",
+  "unconscious_desc_spoken": "Step one: Open the airway by gently tilting the head back and lifting the chin. Step two: Check for normal breathing for ten seconds by looking, listening, and feeling. Step three: If breathing normally, place them in the recovery position on their side. Step four: If they are not breathing normally, call nine one one or one one two and start C P R immediately.",
+
+  "guidance_fall_head_trauma": "1. Do not move abruptly; support head and neck. 2. Call 112/911 immediately if: loss of consciousness, vomiting, lethargy, or extreme drowsiness occurs. 3. Apply a cold compress to the bump. 4. Closely monitor behavior for 24 hours.",
+  "guidance_fall_head_trauma_spoken": "Step one: Do not pick up or move the child abruptly, carefully stabilize the head and neck. Step two: Immediately call nine one one or one one two if there is any loss of consciousness, repeated vomiting, limpness, or abnormal drowsiness. Step three: Apply a cold compress wrapped in a cloth to reduce swelling. Step four: Closely monitor the child's alertness and behavior for the next twenty-four hours.",
+
+  "guidance_chemical_ingestion": "1. DO NOT induce vomiting to prevent airway foaming and burns. 2. Call 112 immediately and keep the container. 3. Rinse mouth with water. 4. Keep sitting upright and monitor breathing.",
+  "guidance_chemical_ingestion_spoken": "Step one: Absolutely do not induce vomiting! This risks chemical foaming, severe airway burns, and aspiration into the lungs. Step two: Call nine one one or one one two immediately and secure the original container. Step three: Rinse the mouth thoroughly with clean water to remove any residual liquid or gel. Step four: Keep the person sitting upright and continuously monitor their breathing.",
+
+  "guidance_insect_mouth": "1. Call 112/911 immediately – sting in mouth risks rapid airway obstruction! 2. Give ice cubes to suck on or cold water. 3. Keep patient sitting upright. 4. Be ready for CPR.",
+  "guidance_insect_mouth_spoken": "Step one: Call nine one one or one one two immediately! A sting inside the mouth or throat can cause complete airway blockage within sixty seconds! Step two: Give ice cubes to suck on or small sips of ice water to slow down internal swelling. Step three: Keep the patient sitting straight upright. Step four: Closely monitor their breathing and be ready to begin C P R.",
+
+  "guidance_insect_skin": "1. Scrape off the stinger with a card or fingernail. 2. Apply a cold compress. 3. Monitor for breathing difficulty or swelling – if present, call 112 immediately.",
+  "guidance_insect_skin_spoken": "Step one: Scrape the stinger off sideways using a credit card edge or fingernail. Never pinch with tweezers as this injects remaining venom. Step two: Apply a cold compress to reduce pain and swelling. Step three: Watch closely for hives, facial swelling, or breathing difficulty. If observed, call nine one one or one one two immediately.",
+
+  "guidance_burn": "1. Cool with cold running tap water for 15-20 minutes. 2. Remove jewelry before swelling starts. 3. Cover loosely with a sterile dressing. 4. Do not pop blisters.",
+  "guidance_burn_spoken": "Step one: Immediately cool the burn under clean, cool running tap water for a full fifteen to twenty minutes. Step two: Remove rings, watches, and tight clothing right away before severe swelling develops. Step three: Cover the burn loosely with a clean, sterile dressing. Do not pop blisters or apply ointments. Step four: For extensive burns or facial burns, call nine one one or one one two immediately.",
+
+  "guidance_seizure": "1. Protect head from injury (place something soft underneath). 2. DO NOT insert anything into mouth and do not restrain. 3. After shaking stops, place in recovery position and call 112.",
+  "guidance_seizure_spoken": "Step one: Protect the head from trauma by placing a folded jacket or soft item underneath. Step two: Do not put anything between the teeth and do not forcefully restrain the convulsive movements. Step three: Clear away sharp or dangerous nearby objects. Step four: After convulsions stop, check breathing, turn the person into the recovery position, and call nine one one or one one two.",
+
+  "guidance_fracture": "1. Immobilize the injured limb in the position found (including adjacent joints). 2. Apply a cold compress wrapped in cloth. 3. Do not attempt to realign bone. 4. Proceed to emergency department or call 112.",
+  "guidance_fracture_spoken": "Step one: Immobilize the injured limb exactly in the position you found it, supporting both the joint above and below the injury. Step two: Apply a cold compress wrapped in cloth to reduce swelling and pain. Step three: Do not attempt to straighten or realign the bone. Step four: Safely transport the patient to an emergency department or call nine one one or one one two.",
+
+  "guidance_nosebleed": "1. Lean the person slightly forward (never tilt back). 2. Firmly pinch the soft part of the nose for 10 minutes. 3. Apply a cold pack to the back of the neck. 4. Do not let them blow their nose.",
+  "guidance_nosebleed_spoken": "Step one: Lean the person slightly forward. Never tilt the head back, as blood will enter the throat and stomach. Step two: Firmly pinch the soft fleshy part of the nose for ten uninterrupted minutes. Step three: Place a cold pack on the back of the neck or forehead. Step four: Do not allow the person to blow their nose after the bleeding stops.",
+
+  "guidance_general_emergency": "1. Ensure the scene is safe. 2. Check responsiveness and breathing. 3. In any medical emergency, call 112 immediately.",
+  "guidance_general_emergency_spoken": "Step one: Ensure your own safety and that the scene is secure. Step two: Check if the person responds and assess their breathing. Step three: In any acute medical emergency, call nine one one or one one two immediately.",
+
   "back_home": "← FIRST AID // COMMAND",
   "legal_label": "LEGAL",
   "privacy_title": "Privacy Policy",

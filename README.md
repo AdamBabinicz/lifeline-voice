@@ -108,41 +108,52 @@ Mobile operating systems enforce strict sandbox and power-saving policies that b
 | iOS Audio Autoplay Policy | Safari blocks `speechSynthesis` when triggered asynchronously by an AI API response.        | User-gesture audio unlock: the first tap triggers a silent synthetic utterance, priming the iOS audio engine for hands-free speech. |
 | Mobile Screen Timeout     | Phones dim and sleep after ~30 s of inactivity, locking the rescuer out during CPR.         | Auto-resuming Screen Wake Lock: a `visibilitychange` listener re-acquires the screen lock whenever the app regains focus.           |
 | 300 ms Tap Latency        | Mobile browsers delay touch events to detect double taps.                                   | `touch-action: manipulation` enforced globally on all emergency controls for immediate, tap-delay-free touch response.              |
+| Speaker Echo & Monologue Lock | Device speaker loops into the microphone triggering infinite speech feedback; rescuer cannot interrupt long medical text. | Real-Time Voice Barge-In & Intent Gating: incoming audio is matched against rescue intents in real-time (`interimResults: true`). Any new imperative command immediately cancels ongoing speech (`speechSynthesis.cancel()`), while self-echo is silently suppressed. |
 
 ## 🚀 Key Features
 
-### 🎙️ Hands-Free Operational Loop (Web Speech API)
+### 🎙️ Zero-Latency Voice Barge-In & Hands-Free Operational Loop
 
-Native browser Speech Recognition and Speech Synthesis (pl-PL & en-US).
+Native browser Speech Recognition and Speech Synthesis (bilingual: `pl-PL` & `en-US`).
 
-The rescuer taps once, sets the phone beside the victim, and issues voice commands. Spoken instructions are read aloud automatically through the phone speaker — no need to look at the screen while performing chest compressions.
+- **Real-Time Voice Barge-In (Instant Interruption):** In dynamic emergencies, patient status can deteriorate instantly (e.g., a choking victim collapses into cardiac arrest). The rescuer does not have to wait for the assistant to finish speaking: shouting a new command (e.g., *"Patient lost consciousness!"* or *"Start CPR!"*) immediately aborts the active speech synthesizer (`window.speechSynthesis.cancel()`) in under 200 ms and transitions to the new protocol with zero delay.
+- **Acoustic Feedback & Echo Suppression:** Prevents the device speaker from triggering false positive commands in its own microphone. The engine analyzes incoming audio against deterministic emergency intents; ambient speaker audio is filtered out, while legitimate rescuer commands cut through effortlessly.
+- **Single-Shot Interim Execution:** Uses real-time interim streaming (`interimResults: true`) for instant responsiveness, protected by session-index debouncing so instructions are spoken exactly once without repetitive stuttering.
 
-### ⚡ Zero-Latency Deterministic Fallback vs. Dynamic AI Guidance
+### ⚡ 12 Deterministic ERC/AHA Emergency Protocols (0 ms Local Latency)
 
-- **Deterministic Local Path (no network round-trip)** — Core life-threatening emergencies (CPR, choking, severe bleeding, unconsciousness) trigger visual and auditory action protocols immediately, without waiting for any network call.
-- **Dynamic AI Reasoning (Secure Server-Side Proxy)** — Complex, open-ended queries (e.g., _"Patient has a nosebleed, what should I do?"_) are routed through a secure Next.js Route Handler: the Groq API key never leaves the server (zero browser exposure), only the final answer returns. The endpoint strips thinking tokens and applies a **constrained emergency system prompt** with explicit guardrails — answers in at most 3 sentences, immediate action first, no diagnosing, no inventing procedures — while surfacing non-obvious, actionable steps: _slide off rings before swelling locks them on_, _cool the burn with running water_, _never induce vomiting_ after corrosive ingestion.
+Core life-threatening physical emergencies never wait for cloud network round-trips. LifeLine Voice incorporates an expanded, locally validated catalog of pre-hospital protocols aligned with ERC/AHA resuscitation guidelines, specifically targeting dangerous human reflexes and common panic myths:
 
-### 🔒 Secure Server-Side AI Proxy (Route Handler)
+1. **Cardiopulmonary Resuscitation (CPR):** 30:2 compression-to-ventilation ratio, 5–6 cm depth, auto-starting the 110 BPM sensory metronome.
+2. **Severe Choking & Airway Obstruction:** 5 back blows followed by 5 Heimlich abdominal thrusts with forward lean.
+3. **Massive Arterial Bleeding:** Continuous direct pressure, limb elevation, strictly adding fresh layers without removing soaked dressings.
+4. **Unconsciousness / Coma:** 10-second triple-sensory breathing assessment (look, listen, feel) and recovery position.
+5. **Pediatric Fall & Head Trauma:** Strict cervical spine stabilization, checking for critical red flags (loss of consciousness, vomiting, abnormal drowsiness, absence of crying).
+6. **Chemical / Detergent Ingestion (Laundry Pods):** **Strict prohibition of inducing vomiting** (preventing chemical foaming, esophageal re-burning, and lung flooding), oral water rinse, and upright positioning.
+7. **Insect Sting in Mouth / Throat:** Imminent airway obstruction warning (<60s), immediate 112 dispatch, sucking ice cubes/cold water to retard internal edema, CPR readiness.
+8. **Insect Sting on Skin:** Mechanical stinger scraping with a card/fingernail (never squeezing with tweezers to avoid venom injection), cold compress.
+9. **Severe Thermal Burns:** 15–20 min cooling under clean running tap water, **immediate removal of rings, watches, and tight clothing before massive tissue edema**, loose sterile covering, never popping blisters.
+10. **Epileptic Seizures & Convulsions:** Protecting head with soft clothing, **strictly forbidding inserting anything into the mouth**, no physical restraint during convulsions.
+11. **Fractures & Dislocations:** Immobilization in the exact found position (including both adjacent joints), cold compress through fabric, no bone manipulation.
+12. **Severe Nosebleeds:** Leaning forward (never tilting back to prevent gastrointestinal and pulmonary aspiration), continuous 10-minute nasal wing compression.
 
-All AI requests are routed through a secure Next.js Route Handler — never a direct browser-to-Groq call.
+### 🔊 Phonetic Speech Normalization (TTS)
 
-- **Security**: API keys are protected server-side (no exposure to Client/Browser).
-- **Stability**: Automatically handles Model-Not-Found (404) and API-Overload (429) errors with graceful fallback to the local deterministic protocols.
-- **Speed**: Direct server-to-server connection with Groq Cloud for low-latency responses.
+Maintains optimal visual legibility on screen while ensuring natural auditory delivery:
+- **Visual Display:** High-contrast, minimal digits (`112`, `1.`, `2.`, `110 BPM`, `15-20 min`).
+- **Acoustic Speech:** Synthesizer phonetically expands numbers and emergency codes to avoid robotic artifacts (PL: *"sto dwanaście"*, *"Po pierwsze"*, *"er-ka-o"* / EN: *"nine one one or one one two"*, *"Step one"*, *"C-P-R"*).
 
-### 💓 110 BPM Sensory Metronome with Context Lock
+### 🔒 Secure Server-Side AI Proxy (Groq Llama 3.1)
 
-ERC/AHA guidelines require continuous chest compressions at 100–120 BPM. The built-in metronome flashes the screen perimeter in an optical heartbeat rhythm (110 BPM).
+Complex, open-ended questions outside the 12 deterministic protocols are securely proxied through a server-side Next.js Route Handler. The Groq API key is completely hidden from the browser. The AI response is strictly constrained to 3 actionable, imperative sentences without pleasantries or disclaimers.
 
-**Medical Safety Interlock** — The metronome is strictly locked to the CPR context. If the user switches to bleeding or choking, the metronome pauses automatically to prevent dangerous chest compressions on conscious patients.
+### 💓 110 BPM Sensory Metronome with Safety Context Lock
+
+Flashes the screen perimeter with a high-visibility optical pulse matching ERC/AHA compression guidelines (110 BPM) and emits distinct acoustic AED beeps alongside physical haptic vibration (`navigator.vibrate(45)`). Locked strictly to CPR context to prevent dangerous compressions on conscious patients.
 
 ### 🛡️ Screen Wake Lock Hardware Telemetry
 
-Integrates the browser-native Screen Wake Lock API to prevent mobile screens from dimming or locking during critical rescue procedures — no contaminated hands ever need to touch the phone.
-
-### 🌐 Instant Bilingual Localization (PL / EN)
-
-One-tap toggle between Polish and English locales; voice synthesis switches between native Polish and English accents automatically.
+Native Screen Wake Lock API integration with auto-recovery on `visibilitychange` ensures the smartphone screen never sleeps during active chest compressions.
 
 ## 🛠️ Tech Stack
 
@@ -218,7 +229,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 | Judging Criteria               | How LifeLine Voice Solves It                                                                                                                                                               |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Solving the Paradox (20%)      | Turns raw, chatty LLMs into a real-time deterministic rescue system: expert-level advice (jewelry, ice, no vomiting) instead of trivial chatter, activated without any network round-trip. |
+| Solving the Paradox (20%)      | Solves the latency, chattiness, and hallucination paradox by implementing instant Voice Barge-In, acoustic feedback suppression, phonetic TTS normalization, and a 12-protocol deterministic emergency catalog (0 ms local latency) for life-critical physical scenarios. |
 | Technical Implementation (20%) | Clean hybrid architecture: Web Speech STT/TTS + secure server-side Groq proxy (Route Handler) + auto-resuming Mobile Wake Lock + context-locked metronome.                                 |
 | Innovation & Creativity (20%)  | Moves away from generic chatbots toward hands-free sensory dispatch — plus a constrained emergency prompt that teaches non-obvious survival steps.                                         |
 | Design & UX (20%)              | High-contrast Swiss-Brutalist emergency typography designed for legibility during adrenaline-fueled panic.                                                                                 |
