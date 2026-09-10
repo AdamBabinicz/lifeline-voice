@@ -231,20 +231,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pl" suppressHydrationWarning>
-      <body
-        className={`${inter.variable} ${geistMono.variable} font-sans antialiased`}
-        suppressHydrationWarning
-      >
-        {/* SCHEMA.ORG STRUCTURED DATA (JSON-LD) - DIRECT IN BODY TO PREVENT HYDRATION MISMATCH */}
+      <head>
+        {/* SZYBKI SYNCHRONICZNY CONSENT MODE V2 BEZ BLOKOWANIA HYDRACJI */}
         <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-
-        {/* GOOGLE CONSENT MODE V2 DEFAULT INITIALIZATION */}
-        <Script
-          id="google-consent-mode-default"
-          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];
@@ -274,12 +263,22 @@ export default function RootLayout({
             `,
           }}
         />
+      </head>
+      <body
+        className={`${inter.variable} ${geistMono.variable} font-sans antialiased`}
+        suppressHydrationWarning
+      >
+        {/* SCHEMA.ORG STRUCTURED DATA (JSON-LD) */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
 
-        {/* GOOGLE TAG MANAGER */}
+        {/* GOOGLE TAG MANAGER - ŁADOWANY W TLE (LAZY ONLOAD) */}
         {GTM_ID && (
           <Script
             id="gtm-loader"
-            strategy="afterInteractive"
+            strategy="lazyOnload"
             dangerouslySetInnerHTML={{
               __html: `
                 (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -292,17 +291,17 @@ export default function RootLayout({
           />
         )}
 
-        {/* GOOGLE ANALYTICS 4 */}
+        {/* GOOGLE ANALYTICS 4 - ŁADOWANY W TLE (LAZY ONLOAD) */}
         {GA4_ID && (
           <>
             <Script
               id="ga4-loader"
-              strategy="afterInteractive"
+              strategy="lazyOnload"
               src={`https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`}
             />
             <Script
               id="ga4-config"
-              strategy="afterInteractive"
+              strategy="lazyOnload"
               dangerouslySetInnerHTML={{
                 __html: `
                   gtag('js', new Date());
