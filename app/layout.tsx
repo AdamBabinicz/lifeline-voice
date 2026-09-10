@@ -231,9 +231,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pl" suppressHydrationWarning>
-      <head>
-        {/* SZYBKI SYNCHRONICZNY CONSENT MODE V2 BEZ BLOKOWANIA HYDRACJI */}
+      <body
+        className={`${inter.variable} ${geistMono.variable} font-sans antialiased`}
+        suppressHydrationWarning
+      >
+        {/* SCHEMA.ORG STRUCTURED DATA (JSON-LD) */}
         <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+
+        {/* GOOGLE CONSENT MODE V2 - INITIALIZACJA BEZ BŁĘDU HYDRACJI #418 */}
+        <Script
+          id="google-consent-mode-default"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];
@@ -263,18 +274,8 @@ export default function RootLayout({
             `,
           }}
         />
-      </head>
-      <body
-        className={`${inter.variable} ${geistMono.variable} font-sans antialiased`}
-        suppressHydrationWarning
-      >
-        {/* SCHEMA.ORG STRUCTURED DATA (JSON-LD) */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
 
-        {/* GOOGLE TAG MANAGER - ŁADOWANY W TLE (LAZY ONLOAD) */}
+        {/* GOOGLE TAG MANAGER - LAZY ONLOAD */}
         {GTM_ID && (
           <Script
             id="gtm-loader"
@@ -291,7 +292,7 @@ export default function RootLayout({
           />
         )}
 
-        {/* GOOGLE ANALYTICS 4 - ŁADOWANY W TLE (LAZY ONLOAD) */}
+        {/* GOOGLE ANALYTICS 4 - LAZY ONLOAD */}
         {GA4_ID && (
           <>
             <Script
