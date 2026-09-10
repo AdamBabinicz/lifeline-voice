@@ -48,7 +48,7 @@ export function ProtocolAnimation({
           <div className="flex flex-col items-center gap-3 sm:gap-4">
             <div className="relative">
               <HeartPulse
-                className={`size-16 sm:size-24 text-primary ${
+                className={`size-16 sm:size-24 text-red-700 ${
                   active ? "opacity-100" : "opacity-40"
                 }`}
               />
@@ -58,7 +58,7 @@ export function ProtocolAnimation({
                 }`}
               />
             </div>
-            <p className="font-mono text-[11px] sm:text-xs font-bold animate-pulse uppercase tracking-wider text-primary text-center">
+            <p className="font-mono text-[11px] sm:text-xs font-bold animate-pulse uppercase tracking-wider text-red-700 dark:text-red-400 text-center">
               {isPl
                 ? "Ciągły ucisk na środku klatki"
                 : "Continuous chest compressions"}
@@ -85,14 +85,14 @@ export function ProtocolAnimation({
           <div className="flex flex-col items-center gap-3 sm:gap-4">
             <div className="relative">
               <Droplets
-                className={`size-16 sm:size-24 text-destructive ${
+                className={`size-16 sm:size-24 text-red-600 ${
                   active
                     ? "scale-110 sm:scale-125 opacity-100"
                     : "scale-100 opacity-60"
                 }`}
               />
             </div>
-            <p className="font-mono text-[11px] sm:text-xs font-bold uppercase tracking-wider text-destructive text-center">
+            <p className="font-mono text-[11px] sm:text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-400 text-center">
               {isPl ? "Ciągły, mocny ucisk rany" : "Direct continuous pressure"}
             </p>
           </div>
@@ -104,7 +104,7 @@ export function ProtocolAnimation({
                 active ? "rotate-12" : "rotate-0"
               }`}
             />
-            <p className="font-mono text-[11px] sm:text-xs font-bold uppercase tracking-wider text-yellow-500 text-center">
+            <p className="font-mono text-[11px] sm:text-xs font-bold uppercase tracking-wider text-yellow-600 dark:text-yellow-400 text-center">
               {isPl
                 ? "Sprawdź oddech przez 10 sekund"
                 : "Check breathing for 10 seconds"}
@@ -121,14 +121,14 @@ export function VoiceVisualizer({ active }: { active: boolean }) {
   return (
     <div
       aria-hidden="true"
-      className={`flex h-14 sm:h-20 w-full items-center justify-center gap-1 sm:gap-1.5 border border-primary/30 bg-primary/5 px-2 sm:px-6 overflow-hidden ${
-        active ? "shadow-[0_0_42px_var(--primary)]" : "opacity-40"
+      className={`flex h-14 sm:h-20 w-full items-center justify-center gap-1 sm:gap-1.5 border border-red-700/30 bg-red-700/5 px-2 sm:px-6 overflow-hidden ${
+        active ? "shadow-[0_0_42px_rgba(185,28,28,0.5)]" : "opacity-40"
       }`}
     >
       {Array.from({ length: 24 }).map((_, i) => (
         <span
           key={i}
-          className={`w-1 rounded-full bg-primary transition-all duration-150 shrink-0 ${
+          className={`w-1 rounded-full bg-red-700 transition-all duration-150 shrink-0 ${
             active ? "animate-bounce" : "h-2"
           }`}
           style={{
@@ -150,7 +150,6 @@ export function StatusHeader({
   onTheme,
   isListening,
 }: any) {
-  // Bezpiecznik hydracji: sprawdzamy, czy komponent zamontował się w przeglądarce
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
@@ -161,8 +160,8 @@ export function StatusHeader({
     <header className="border-b border-border/70 bg-background/95 sticky top-0 z-50">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <div className="flex size-8 sm:size-10 shrink-0 items-center justify-center bg-primary text-primary-foreground">
-            <Zap className="size-4 sm:size-5" />
+          <div className="flex size-8 sm:size-10 shrink-0 items-center justify-center bg-red-700 text-white">
+            <Zap className="size-4 sm:size-5 text-white" />
           </div>
           <div className="min-w-0">
             <p className="truncate font-mono text-xs sm:text-sm font-bold tracking-[0.14em] sm:tracking-[0.18em]">
@@ -182,9 +181,9 @@ export function StatusHeader({
           >
             <span className="relative flex size-2 sm:size-2.5 shrink-0">
               {isListening && (
-                <span className="absolute inline-flex size-full animate-ping bg-primary opacity-70" />
+                <span className="absolute inline-flex size-full animate-ping bg-red-700 opacity-70" />
               )}
-              <span className="relative inline-flex size-2 sm:size-2.5 bg-primary" />
+              <span className="relative inline-flex size-2 sm:size-2.5 bg-red-700" />
             </span>
             <span className="hidden xs:inline sm:inline uppercase">
               {t.status_listening}
@@ -195,7 +194,7 @@ export function StatusHeader({
             onClick={onLocale}
             variant="outline"
             size="sm"
-            className="h-8 sm:h-9 px-2 sm:px-3 gap-1 sm:gap-2 font-mono text-xs font-bold shrink-0"
+            className="h-8 sm:h-9 px-2 sm:px-3 gap-1 sm:gap-2 font-mono text-xs font-bold shrink-0 cursor-pointer"
             title="Przełącz język / Change language"
           >
             <Languages className="size-3.5 sm:size-4" />
@@ -206,10 +205,9 @@ export function StatusHeader({
             onClick={onTheme}
             variant="outline"
             size="icon"
-            className="size-8 sm:size-9 shrink-0"
+            className="size-8 sm:size-9 shrink-0 cursor-pointer"
             aria-label="Przełącz motyw"
           >
-            {/* Ochrona przed błędem hydracji serwer-klient */}
             {!hasMounted ? (
               <span className="size-3.5 sm:size-4 inline-block" />
             ) : theme === "dark" ? (
@@ -230,11 +228,11 @@ export function ProtocolCard({ protocol, selected, label, onSelect }: any) {
   return (
     <Button
       onClick={onSelect}
-      variant={selected ? "default" : "outline"}
-      className={`h-auto min-h-[6.5rem] sm:min-h-[10rem] w-full justify-between items-start rounded-none border-2 p-3 sm:p-5 text-left font-mono transition-all ${
+      variant="outline"
+      className={`h-auto min-h-[6.5rem] sm:min-h-[10rem] w-full justify-between items-start rounded-none border-2 p-3 sm:p-5 text-left font-mono transition-all cursor-pointer ${
         selected
-          ? "border-primary shadow-[0_0_15px_rgba(255,0,0,0.3)]"
-          : "border-border bg-card hover:border-primary"
+          ? "border-red-700 bg-red-700 text-white hover:bg-red-800 hover:text-white shadow-[0_0_15px_rgba(185,28,28,0.3)]"
+          : "border-border bg-card text-card-foreground hover:border-red-700"
       }`}
     >
       <div className="flex h-full w-full flex-col justify-between gap-3 sm:gap-6">
@@ -271,7 +269,7 @@ export function Metronome({ active, beat, t, onToggle }: any) {
         <div
           className={`flex size-9 sm:size-10 shrink-0 items-center justify-center border transition-colors ${
             active
-              ? "border-primary text-primary"
+              ? "border-red-700 text-red-700"
               : "border-border text-muted-foreground"
           }`}
         >
@@ -284,7 +282,7 @@ export function Metronome({ active, beat, t, onToggle }: any) {
       <div
         className={`mt-4 sm:mt-6 flex h-14 sm:h-20 items-center justify-center border-2 transition-all duration-100 ${
           active
-            ? `border-primary ${beat ? "bg-primary/15 shadow-[0_0_28px_var(--primary)]" : "bg-transparent"}`
+            ? `border-red-700 ${beat ? "bg-red-700/15 shadow-[0_0_28px_rgba(185,28,28,0.5)]" : "bg-transparent"}`
             : "border-border bg-background"
         }`}
       >
@@ -295,8 +293,11 @@ export function Metronome({ active, beat, t, onToggle }: any) {
 
       <Button
         onClick={onToggle}
-        variant={active ? "destructive" : "default"}
-        className="mt-3 sm:mt-4 h-11 sm:h-12 w-full rounded-none font-mono font-black tracking-widest uppercase text-xs sm:text-sm"
+        className={`mt-3 sm:mt-4 h-11 sm:h-12 w-full rounded-none font-mono font-black tracking-widest uppercase text-xs sm:text-sm cursor-pointer ${
+          active
+            ? "bg-red-950 hover:bg-black text-white border border-red-800"
+            : "bg-red-700 hover:bg-red-800 text-white shadow-sm"
+        }`}
       >
         {active ? t.btn_stop : t.btn_start}
       </Button>

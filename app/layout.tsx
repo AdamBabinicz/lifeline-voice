@@ -23,8 +23,6 @@ export const viewport: Viewport = {
   themeColor: "#ff0000",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 };
 
 const SITE_URL = "https://lifeline-command.netlify.app";

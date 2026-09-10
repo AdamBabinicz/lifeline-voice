@@ -739,18 +739,18 @@ export function EmergencyDashboard() {
 
             <Button
               onClick={toggleListening}
-              className={`mt-4 h-14 sm:h-20 w-full rounded-none font-mono font-black tracking-wider sm:tracking-widest text-sm sm:text-base md:text-lg flex items-center justify-center text-center px-4 cursor-pointer ${
+              className={`mt-4 h-14 sm:h-20 w-full rounded-none font-mono font-black tracking-wider sm:tracking-widest text-sm sm:text-base md:text-lg flex items-center justify-center text-center px-4 cursor-pointer bg-red-700 hover:bg-red-800 text-white dark:bg-red-700 dark:hover:bg-red-800 dark:text-white shadow-md ${
                 isListening
-                  ? "bg-destructive hover:bg-destructive shadow-[0_0_20px_rgba(255,0,0,0.4)]"
+                  ? "!bg-red-950 hover:!bg-red-950 !text-white shadow-[0_0_20px_rgba(255,0,0,0.6)]"
                   : ""
               }`}
             >
               <Mic
-                className={`mr-2 sm:mr-3 size-5 sm:size-6 shrink-0 ${
+                className={`mr-2 sm:mr-3 size-5 sm:size-6 shrink-0 text-white ${
                   isListening ? "animate-pulse" : ""
                 }`}
               />
-              <span className="truncate">
+              <span className="truncate text-white">
                 {isListening ? t.status_listening : t.btn_listen_start}
               </span>
             </Button>
@@ -804,14 +804,14 @@ export function EmergencyDashboard() {
 
       <a
         href="tel:112"
-        className="fixed bottom-3 right-3 sm:bottom-6 sm:right-6 z-[100] flex items-center gap-2.5 sm:gap-4 bg-primary px-4 py-3 sm:px-6 sm:py-4 text-primary-foreground shadow-2xl transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+        className="fixed bottom-3 right-3 sm:bottom-6 sm:right-6 z-[100] flex items-center gap-2.5 sm:gap-4 bg-red-700 hover:bg-red-800 text-white px-4 py-3 sm:px-6 sm:py-4 shadow-2xl transition-transform hover:scale-105 active:scale-95 cursor-pointer"
       >
-        <PhoneCall className="size-5 sm:size-7 animate-bounce shrink-0" />
+        <PhoneCall className="size-5 sm:size-7 animate-bounce shrink-0 text-white" />
         <span>
-          <span className="block font-mono text-xl sm:text-3xl font-black leading-none">
+          <span className="block font-mono text-xl sm:text-3xl font-black leading-none text-white">
             {t.call_112}
           </span>
-          <span className="mt-0.5 sm:mt-1 block text-[9px] sm:text-[10px] font-bold uppercase tracking-widest opacity-90">
+          <span className="mt-0.5 sm:mt-1 block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-white">
             {t.call_112_sub}
           </span>
         </span>

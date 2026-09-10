@@ -92,10 +92,10 @@ export function CookieBanner() {
         <aside
           role="region"
           aria-label={t.cookies_title}
-          className="fixed bottom-3 left-3 sm:bottom-4 sm:left-4 z-40 max-w-sm sm:max-w-md w-[calc(100vw-1.5rem)] border-2 border-primary bg-background p-4 sm:p-5 shadow-[0_0_30px_rgba(0,0,0,0.4)] transition-all font-mono"
+          className="fixed bottom-3 left-3 sm:bottom-4 sm:left-4 z-40 max-w-sm sm:max-w-md w-[calc(100vw-1.5rem)] border-2 border-red-700 bg-background p-4 sm:p-5 shadow-[0_0_30px_rgba(0,0,0,0.4)] transition-all font-mono"
         >
           <div className="flex items-start gap-3">
-            <div className="flex size-7 shrink-0 items-center justify-center bg-primary text-primary-foreground">
+            <div className="flex size-7 shrink-0 items-center justify-center bg-red-700 text-white">
               <Shield className="size-4" />
             </div>
             <div className="min-w-0 flex-1">
@@ -112,21 +112,21 @@ export function CookieBanner() {
             <button
               type="button"
               onClick={handleAcceptAll}
-              className="flex-1 min-w-[120px] bg-primary text-primary-foreground px-3 py-2 text-xs font-black uppercase tracking-wider border border-primary hover:bg-primary/90 transition-colors"
+              className="flex-1 min-w-[120px] bg-red-700 hover:bg-red-800 text-white px-3 py-2 text-xs font-black uppercase tracking-wider border border-red-700 hover:border-red-800 transition-colors shadow-sm cursor-pointer"
             >
               {t.cookies_accept_all}
             </button>
             <button
               type="button"
               onClick={handleRejectOptional}
-              className="flex-1 min-w-[120px] bg-card text-foreground px-3 py-2 text-xs font-bold uppercase tracking-wider border border-border hover:border-foreground transition-colors"
+              className="flex-1 min-w-[120px] bg-card text-foreground px-3 py-2 text-xs font-bold uppercase tracking-wider border border-border hover:border-foreground transition-colors cursor-pointer"
             >
               {t.cookies_reject_optional}
             </button>
             <button
               type="button"
               onClick={() => setModalOpen(true)}
-              className="w-full sm:w-auto px-3 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground border border-transparent hover:border-border transition-colors flex items-center justify-center gap-1.5"
+              className="w-full sm:w-auto px-3 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground border border-transparent hover:border-border transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <Settings2 className="size-3.5" />
               <span>{t.cookies_customize}</span>
@@ -145,12 +145,12 @@ export function CookieBanner() {
         >
           <div
             ref={modalRef}
-            className="w-full max-w-lg border-2 border-primary bg-background p-5 sm:p-7 shadow-[0_0_40px_rgba(255,0,0,0.3)] max-h-[90vh] flex flex-col justify-between overflow-y-auto"
+            className="w-full max-w-lg border-2 border-red-700 bg-background p-5 sm:p-7 shadow-[0_0_40px_rgba(255,0,0,0.3)] max-h-[90vh] flex flex-col justify-between overflow-y-auto"
           >
             <div>
               <div className="flex items-center justify-between border-b border-border pb-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex size-7 items-center justify-center bg-primary text-primary-foreground">
+                  <div className="flex size-7 items-center justify-center bg-red-700 text-white">
                     <Shield className="size-4" />
                   </div>
                   <h2
@@ -164,7 +164,7 @@ export function CookieBanner() {
                   type="button"
                   onClick={() => setModalOpen(false)}
                   aria-label={t.cookies_close}
-                  className="text-muted-foreground hover:text-foreground p-1"
+                  className="text-muted-foreground hover:text-foreground p-1 cursor-pointer"
                 >
                   <X className="size-5" />
                 </button>
@@ -206,9 +206,9 @@ export function CookieBanner() {
                       role="switch"
                       aria-checked={analyticsAllowed}
                       onClick={() => setAnalyticsAllowed(!analyticsAllowed)}
-                      className={`flex h-6 w-12 items-center border p-0.5 transition-colors ${
+                      className={`flex h-6 w-12 items-center border p-0.5 transition-colors cursor-pointer ${
                         analyticsAllowed
-                          ? "border-primary bg-primary"
+                          ? "border-red-700 bg-red-700"
                           : "border-border bg-muted"
                       }`}
                     >
@@ -231,7 +231,7 @@ export function CookieBanner() {
               <button
                 type="button"
                 onClick={handleSaveCustom}
-                className="w-full sm:flex-1 bg-primary text-primary-foreground px-4 py-2.5 text-xs font-black uppercase tracking-wider border border-primary hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+                className="w-full sm:flex-1 bg-red-700 hover:bg-red-800 text-white px-4 py-2.5 text-xs font-black uppercase tracking-wider border border-red-700 hover:border-red-800 transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Check className="size-4" />
                 <span>{t.cookies_save}</span>
@@ -239,14 +239,14 @@ export function CookieBanner() {
               <button
                 type="button"
                 onClick={handleAcceptAll}
-                className="w-full sm:w-auto bg-card text-foreground px-4 py-2.5 text-xs font-bold uppercase tracking-wider border border-border hover:border-foreground transition-colors"
+                className="w-full sm:w-auto bg-card text-foreground px-4 py-2.5 text-xs font-bold uppercase tracking-wider border border-border hover:border-foreground transition-colors cursor-pointer"
               >
                 {t.cookies_accept_all}
               </button>
               <button
                 type="button"
                 onClick={handleRejectOptional}
-                className="w-full sm:w-auto text-muted-foreground hover:text-foreground px-3 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors"
+                className="w-full sm:w-auto text-muted-foreground hover:text-foreground px-3 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
               >
                 {t.cookies_reject_optional}
               </button>
