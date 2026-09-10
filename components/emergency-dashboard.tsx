@@ -249,7 +249,20 @@ export function EmergencyDashboard() {
       lastSpokenTextRef.current = text;
       isSpeakingRef.current = true;
 
-      const utterance = new SpeechSynthesisUtterance(text);
+      // Fonetyczna normalizacja: lektor mówi "sto dwanaście" oraz naturalne "Po pierwsze, Po drugie..."
+      let speechText = text;
+      if (locale === "pl") {
+        speechText = speechText
+          .replace(/\b112\b/g, "sto dwanaście")
+          .replace(/(?:^|\s)1\.\s*/g, " Po pierwsze, ")
+          .replace(/(?:^|\s)2\.\s*/g, " Po drugie, ")
+          .replace(/(?:^|\s)3\.\s*/g, " Po trzecie, ")
+          .replace(/(?:^|\s)4\.\s*/g, " Po czwarte, ")
+          .replace(/(?:^|\s)5\.\s*/g, " Po piąte, ")
+          .trim();
+      }
+
+      const utterance = new SpeechSynthesisUtterance(speechText);
       utterance.lang = locale === "pl" ? "pl-PL" : "en-US";
       utterance.rate = 1.0;
       utterance.pitch = 1.0;
