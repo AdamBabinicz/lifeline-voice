@@ -69,7 +69,8 @@ export function EmergencyDashboard() {
   const wakeLockRef = useRef<any>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const lastSpokenTextRef = useRef<string | null>(null);
-  const lastHandledIndexRef = useRef<number>(-1);
+  const lastActionKeyRef = useRef<string | null>(null);
+  const lastActionTimeRef = useRef<number>(0);
   const isSpeakingRef = useRef<boolean>(false);
   const isThinkingRef = useRef<boolean>(false);
   const isCprContext = selected === "cpr";
@@ -294,16 +295,13 @@ export function EmergencyDashboard() {
   }, [wakeLockActive, wakeLockSupported]);
 
   const handleVoiceCommand = useCallback(
-    (transcript: string, resultIndex: number) => {
+    (transcript: string) => {
       const lower = transcript.toLowerCase().trim();
       if (!lower || lower.length < 3) return;
 
-      if (resultIndex === lastHandledIndexRef.current) {
-        return;
-      }
-
       const result = analyzeRescueQuery(transcript, locale, t);
 
+      // Jeśli zapytanie nie pasuje do bazy ratunkowej
       if (result.type === "unknown") {
         if (
           typeof window !== "undefined" &&
@@ -316,15 +314,38 @@ export function EmergencyDashboard() {
         return;
       }
 
-      lastHandledIndexRef.current = resultIndex;
+      // Identyfikator procedury do ochrony przed powtórnym startem
+      const currentActionKey =
+        result.command ||
+        result.protocolId ||
+        result.guidanceKey ||
+        result.displayText;
 
+      const now = Date.now();
+
+      // Zawsze aktualizujemy wyświetlany tekst na ekranie
+      setLastUserQuery(transcript);
+      setErrorMessage(null);
+
+      // JEŚLI TA SAMA PROCEDURA ZOSTAŁA JUŻ ODPALONA W CIĄGU OSTATNICH 2.5 SEKUND:
+      // Ignorujemy kolejne pakiety tego samego zdania, aby lektor NIE ZACINAŁ SIĘ na początku!
+      if (
+        currentActionKey &&
+        currentActionKey === lastActionKeyRef.current &&
+        now - lastActionTimeRef.current < 2500
+      ) {
+        return;
+      }
+
+      // Rejestrujemy nowe wywołanie
+      lastActionKeyRef.current = currentActionKey;
+      lastActionTimeRef.current = now;
+
+      // BARGE-IN: Natychmiast uciszamy trwającą poprzednią wypowiedź
       if (typeof window !== "undefined" && "speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
       isSpeakingRef.current = false;
-
-      setLastUserQuery(transcript);
-      setErrorMessage(null);
 
       if (result.type === "command") {
         if (result.command === "start_cpr") {
@@ -391,7 +412,7 @@ export function EmergencyDashboard() {
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i]?.[0]?.transcript;
         if (transcript) {
-          handleVoiceCommand(transcript, i);
+          handleVoiceCommand(transcript);
         }
       }
     };
@@ -462,6 +483,8 @@ export function EmergencyDashboard() {
       setSelected(id);
       setAiGuidance(null);
       setActiveTitleKey(`title_${id}`);
+      lastActionKeyRef.current = id;
+      lastActionTimeRef.current = Date.now();
 
       if (id === "cpr") {
         setMetronomeActive(true);
@@ -484,6 +507,8 @@ export function EmergencyDashboard() {
       setSelected("cpr");
       setAiGuidance(null);
       setActiveTitleKey("title_cpr");
+      lastActionKeyRef.current = "cpr";
+      lastActionTimeRef.current = Date.now();
       setMetronomeActive(true);
       speakInstruction(
         t.cpr_full_guidance_spoken || t.cpr_full_guidance || t.cpr_desc,
