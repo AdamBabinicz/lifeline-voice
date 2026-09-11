@@ -298,14 +298,12 @@ export function EmergencyDashboard() {
       const lower = transcript.toLowerCase().trim();
       if (!lower || lower.length < 3) return;
 
-      // Jeśli to samo zdanie wywołało już procedurę, zignoruj kolejne części (brak podwójnego czytania)
       if (resultIndex === lastHandledIndexRef.current) {
         return;
       }
 
       const result = analyzeRescueQuery(transcript, locale, t);
 
-      // Jeśli zapytanie nie pasuje do bazy ratunkowej
       if (result.type === "unknown") {
         if (
           typeof window !== "undefined" &&
@@ -318,10 +316,8 @@ export function EmergencyDashboard() {
         return;
       }
 
-      // Oznacz ten indeks jako zrealizowany – dane zdanie odpali się tylko raz!
       lastHandledIndexRef.current = resultIndex;
 
-      // BARGE-IN: Natychmiast uciszamy trwającą wypowiedź!
       if (typeof window !== "undefined" && "speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
@@ -644,14 +640,29 @@ export function EmergencyDashboard() {
           </div>
         </section>
 
+        {/* PRZEŁĄCZNIK WAKE LOCK Z WYRAŹNĄ INFORMACJĄ ZWROTNĄ */}
         <div className="flex flex-wrap gap-4">
           <Button
             variant="outline"
             onClick={() => setWakeLockActive(!wakeLockActive)}
-            className="rounded-none font-mono text-xs sm:text-sm font-bold cursor-pointer"
+            className={`rounded-none font-mono text-xs sm:text-sm font-bold cursor-pointer transition-all border-2 ${
+              wakeLockActive
+                ? "border-primary bg-primary/10 text-primary shadow-sm"
+                : "border-border text-foreground hover:border-primary"
+            }`}
           >
-            <ShieldCheck className="mr-2 size-4 text-primary" />
-            {wakeLockActive ? t.keep_screen_on : t.keep_screen_on}
+            <ShieldCheck
+              className={`mr-2 size-4 ${
+                wakeLockActive
+                  ? "text-primary animate-pulse"
+                  : "text-muted-foreground"
+              }`}
+            />
+            {wakeLockActive
+              ? locale === "pl"
+                ? "EKRAN ZAWSZE AKTYWNY (NIE WYGAŚNIE)"
+                : "SCREEN KEPT AWAKE (ALWAYS ON)"
+              : t.keep_screen_on}
           </Button>
         </div>
       </main>
