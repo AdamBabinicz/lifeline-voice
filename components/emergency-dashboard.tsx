@@ -68,9 +68,13 @@ export function EmergencyDashboard() {
   const recognitionRef = useRef<any>(null);
   const wakeLockRef = useRef<any>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const activeUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const lastSpokenTextRef = useRef<string | null>(null);
   const lastActionKeyRef = useRef<string | null>(null);
   const lastActionTimeRef = useRef<number>(0);
+  const speechEndTimeRef = useRef<number>(0);
+  const lastProcessedTranscriptRef = useRef<string>("");
+  const lastProcessedTranscriptTimeRef = useRef<number>(0);
   const isSpeakingRef = useRef<boolean>(false);
   const isThinkingRef = useRef<boolean>(false);
   const isCprContext = selected === "cpr";
@@ -133,18 +137,59 @@ export function EmergencyDashboard() {
     }
   }, []);
 
+  /**
+   * Sprawdza, czy rozpoznany tekst z mikrofonu nie jest echem głosu lektora wydobywającego się z głośnika
+   */
+  const isSelfEcho = useCallback(
+    (transcript: string, spokenText: string | null): boolean => {
+      if (!spokenText || !transcript) return false;
+      const cleanTranscript = transcript
+        .toLowerCase()
+        .replace(/[^a-z0-9ąćęłńóśźż\s]/gi, "")
+        .trim();
+      const cleanSpoken = spokenText
+        .toLowerCase()
+        .replace(/[^a-z0-9ąćęłńóśźż\s]/gi, "")
+        .trim();
+
+      if (!cleanTranscript || !cleanSpoken) return false;
+
+      // Bezpośrednie zawieranie frazy lektora
+      if (cleanSpoken.includes(cleanTranscript)) return true;
+
+      // Sprawdzenie nakładania słów (jeśli ponad 60% słów transkryptu jest częścią mowy lektora)
+      const transcriptWords = cleanTranscript
+        .split(/\s+/)
+        .filter((w) => w.length > 2);
+      if (transcriptWords.length === 0) return false;
+
+      const matchCount = transcriptWords.filter((w) =>
+        cleanSpoken.includes(w),
+      ).length;
+      return matchCount / transcriptWords.length >= 0.6;
+    },
+    [],
+  );
+
   const speakInstruction = useCallback(
     (text: string) => {
       if (typeof window === "undefined" || !("speechSynthesis" in window))
         return;
 
+      try {
+        window.speechSynthesis.cancel();
+      } catch {
+        // Ignoruj
+      }
+
       isSpeakingRef.current = true;
-      window.speechSynthesis.cancel();
       lastSpokenTextRef.current = text;
 
       const speechText = normalizeSpeechForTTS(text, locale);
 
       const utterance = new SpeechSynthesisUtterance(speechText);
+      activeUtteranceRef.current = utterance; // Zapobiega usuwaniu obiektu przez Garbage Collector w mobilnym Chrome/Safari
+
       utterance.lang = locale === "pl" ? "pl-PL" : "en-US";
       utterance.rate = 1.0;
       utterance.pitch = 1.0;
@@ -160,22 +205,31 @@ export function EmergencyDashboard() {
       }
 
       utterance.onend = () => {
+        activeUtteranceRef.current = null;
+        speechEndTimeRef.current = Date.now();
         setTimeout(() => {
           isSpeakingRef.current = false;
-        }, 300);
+        }, 350);
       };
 
       utterance.onerror = () => {
+        activeUtteranceRef.current = null;
+        speechEndTimeRef.current = Date.now();
         isSpeakingRef.current = false;
       };
 
-      window.speechSynthesis.speak(utterance);
+      try {
+        window.speechSynthesis.speak(utterance);
+      } catch {
+        isSpeakingRef.current = false;
+      }
     },
     [locale],
   );
 
   const repeatLastGuidance = useCallback(() => {
     if (lastSpokenTextRef.current) {
+      lastActionTimeRef.current = Date.now();
       speakInstruction(lastSpokenTextRef.current);
     }
   }, [speakInstruction]);
@@ -299,15 +353,37 @@ export function EmergencyDashboard() {
       const lower = transcript.toLowerCase().trim();
       if (!lower || lower.length < 3) return;
 
+      const now = Date.now();
+
+      // Szybkie odfiltrowanie identycznego transkryptu przychodzącego seriami w milisekundach
+      if (
+        lower === lastProcessedTranscriptRef.current &&
+        now - lastProcessedTranscriptTimeRef.current < 600
+      ) {
+        return;
+      }
+      lastProcessedTranscriptRef.current = lower;
+      lastProcessedTranscriptTimeRef.current = now;
+
+      // Sprawdzenie stanu mowy
+      const isSpeaking =
+        isSpeakingRef.current ||
+        (typeof window !== "undefined" &&
+          "speechSynthesis" in window &&
+          window.speechSynthesis.speaking);
+
+      const isEchoPeriod = isSpeaking || now - speechEndTimeRef.current < 1000;
+
+      // Odrzucenie echa lektora z głośnika
+      if (isEchoPeriod && isSelfEcho(lower, lastSpokenTextRef.current)) {
+        return;
+      }
+
       const result = analyzeRescueQuery(transcript, locale, t);
 
       // Jeśli zapytanie nie pasuje do bazy ratunkowej
       if (result.type === "unknown") {
-        if (
-          typeof window !== "undefined" &&
-          window.speechSynthesis &&
-          window.speechSynthesis.speaking
-        ) {
+        if (isSpeaking) {
           return;
         }
         setLastUserQuery(transcript);
@@ -321,18 +397,27 @@ export function EmergencyDashboard() {
         result.guidanceKey ||
         result.displayText;
 
-      const now = Date.now();
-
       // Zawsze aktualizujemy wyświetlany tekst na ekranie
       setLastUserQuery(transcript);
       setErrorMessage(null);
 
-      // JEŚLI TA SAMA PROCEDURA ZOSTAŁA JUŻ ODPALONA W CIĄGU OSTATNICH 2.5 SEKUND:
-      // Ignorujemy kolejne pakiety tego samego zdania, aby lektor NIE ZACINAŁ SIĘ na początku!
+      // Sprawdzenie tożsamości kontekstu (np. start_cpr i cpr to ta sama procedura)
+      const isSameAction =
+        currentActionKey === lastActionKeyRef.current ||
+        (currentActionKey === "cpr" &&
+          lastActionKeyRef.current === "start_cpr") ||
+        (currentActionKey === "start_cpr" &&
+          lastActionKeyRef.current === "cpr");
+
+      const timeSinceLastAction = now - lastActionTimeRef.current;
+      const timeSinceSpeechEnd = now - speechEndTimeRef.current;
+
+      // OCHRONA PRZED ZAPĘTLANIEM I ZAJĄKNIĘCIAMI:
+      // Jeśli lektor nadal mówi tę samą procedurę LUB minęło za mało czasu od uruchomienia/zakończenia mowy:
+      // ignorujemy powtórne wywołanie, aby lektor nie zaczynał zdania od początku!
       if (
-        currentActionKey &&
-        currentActionKey === lastActionKeyRef.current &&
-        now - lastActionTimeRef.current < 2500
+        isSameAction &&
+        (isSpeaking || timeSinceLastAction < 4000 || timeSinceSpeechEnd < 1200)
       ) {
         return;
       }
@@ -341,7 +426,7 @@ export function EmergencyDashboard() {
       lastActionKeyRef.current = currentActionKey;
       lastActionTimeRef.current = now;
 
-      // BARGE-IN: Natychmiast uciszamy trwającą poprzednią wypowiedź
+      // BARGE-IN: Natychmiast uciszamy trwającą poprzednią wypowiedź (wyłącznie przy nowej procedurze)
       if (typeof window !== "undefined" && "speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
@@ -389,7 +474,7 @@ export function EmergencyDashboard() {
         return;
       }
     },
-    [locale, speakInstruction, t, toggleLocaleFromProvider],
+    [isSelfEcho, locale, speakInstruction, t, toggleLocaleFromProvider],
   );
 
   useEffect(() => {
@@ -435,6 +520,9 @@ export function EmergencyDashboard() {
       } catch {
         // Ignoruj
       }
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
     };
   }, [locale, handleVoiceCommand]);
 
@@ -479,6 +567,10 @@ export function EmergencyDashboard() {
       setAiGuidance(null);
       setActiveTitleKey(null);
       setMetronomeActive(false);
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+      isSpeakingRef.current = false;
     } else {
       setSelected(id);
       setAiGuidance(null);
