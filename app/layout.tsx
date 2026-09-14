@@ -234,7 +234,6 @@ export default function RootLayout({
   return (
     <html lang="pl" suppressHydrationWarning>
       <head>
-        {/* ELIMINACJA 460 MS OPÓŹNIENIA RENDEROWANIA (PRECONNECT DLA GTM) */}
         <link
           rel="preconnect"
           href="https://www.googletagmanager.com"
@@ -252,9 +251,9 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
 
-        {/* GOOGLE CONSENT MODE V2 - PRZENIESIONY NA LAZYONLOAD DLA UWOLNIENIA WĄTKU GŁÓWNEGO I LCP */}
+        {/* GOOGLE CONSENT MODE V2 + DEFERRED GTM/GA4 LOADER (ZERO-IMPACT ON LCP) */}
         <Script
-          id="google-consent-mode-default"
+          id="google-deferred-analytics-engine"
           strategy="lazyOnload"
           dangerouslySetInnerHTML={{
             __html: `
@@ -282,50 +281,48 @@ export default function RootLayout({
                 'ad_personalization': initialMarketing,
                 'wait_for_update': 500
               });
-            `,
-          }}
-        />
 
-        {/* GOOGLE TAG MANAGER - LAZY ONLOAD */}
-        {GTM_ID && (
-          <Script
-            id="gtm-loader"
-            strategy="lazyOnload"
-            dangerouslySetInnerHTML={{
-              __html: `
-                (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-                new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-                j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-                'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-                })(window,document,'script','dataLayer','${GTM_ID}');
-              `,
-            }}
-          />
-        )}
+              var gtmLoaded = false;
+              function loadAnalyticsNow() {
+                if (gtmLoaded) return;
+                gtmLoaded = true;
 
-        {/* GOOGLE ANALYTICS 4 - LAZY ONLOAD */}
-        {GA4_ID && (
-          <>
-            <Script
-              id="ga4-loader"
-              strategy="lazyOnload"
-              src={`https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`}
-            />
-            <Script
-              id="ga4-config"
-              strategy="lazyOnload"
-              dangerouslySetInnerHTML={{
-                __html: `
+                // 1. Google Tag Manager
+                var gtmId = '${GTM_ID || ""}';
+                if (gtmId) {
+                  (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+                  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+                  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+                  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+                  })(window,document,'script','dataLayer',gtmId);
+                }
+
+                // 2. Google Analytics 4 (jeśli GTM nie jest używany)
+                var gaId = '${GA4_ID || ""}';
+                if (gaId && !gtmId) {
+                  var s = document.createElement('script');
+                  s.async = true;
+                  s.src = 'https://www.googletagmanager.com/gtag/js?id=' + gaId;
+                  document.head.appendChild(s);
                   gtag('js', new Date());
-                  gtag('config', '${GA4_ID}', {
+                  gtag('config', gaId, {
                     page_path: window.location.pathname,
                     anonymize_ip: true
                   });
-                `,
-              }}
-            />
-          </>
-        )}
+                }
+              }
+
+              // Załaduj po 2500ms (po zakończeniu pomiaru LCP) lub przy pierwszej interakcji
+              var timer = setTimeout(loadAnalyticsNow, 2500);
+              ['scroll', 'touchstart', 'click', 'keydown'].forEach(function(ev) {
+                window.addEventListener(ev, function() {
+                  clearTimeout(timer);
+                  loadAnalyticsNow();
+                }, { once: true, passive: true });
+              });
+            `,
+          }}
+        />
 
         {/* GTM NOSCRIPT FALLBACK */}
         {GTM_ID && (
