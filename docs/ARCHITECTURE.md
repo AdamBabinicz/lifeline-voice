@@ -6,6 +6,7 @@
 **Status:** Prototype; not a certified medical device
 **Repository:** [github.com/AdamBabinicz/lifeline-voice](https://github.com/AdamBabinicz/lifeline-voice)
 **Live Demo:** [lifeline-command.netlify.app](https://lifeline-command.netlify.app)
+**License:** [MIT](https://github.com/AdamBabinicz/lifeline-voice/blob/main/LICENSE)
 
 > ⚠️ **Safety Notice:** LifeLine Voice is a hackathon prototype and **does not replace** emergency dispatchers, certified first responders, or professional medical care. In any physical emergency, **always** call emergency services first (112 in the EU, 911 in the USA).
 
@@ -17,10 +18,10 @@
 
 In Sudden Cardiac Arrest (SCA), irreversible brain death begins within 3–4 minutes of losing consciousness. Standard Foundation Model pipelines deliberate, stream reasoning tokens, and take 4–8 seconds to respond — more than double the acceptable latency in acute arrest. LifeLine Voice eliminates this latency barrier by splitting the execution pipeline into **two deterministic and generative tracks**:
 
-| Execution Track                    | Trigger Mechanism                                                                                                                                             | Latency Profile                        | Network Dependency                |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | --------------------------------- |
-| **Deterministic (Local Client)**   | 12 life-threatening physical protocols (CPR, choking, severe arterial bleeding, coma, burns, seizures, fractures, nosebleeds, insect stings, pediatric falls) | **0 ms** (design target)               | ❌ None (100% Offline)            |
-| **Generative (Server-Side Proxy)** | Complex, open-ended medical queries outside the 12 primary protocols                                                                                          | Several seconds (Groq Cloud dependent) | ✅ Yes (via Secure Route Handler) |
+| Execution Track                    | Trigger Mechanism                                                                                                                                                                 | Latency Profile                        | Network Dependency               |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | -------------------------------- |
+| **Deterministic (Local Client)**   | 12 life-threatening physical protocols (CPR, choking, severe arterial bleeding, coma, burns, seizures, fractures, nosebleeds, insect stings, pediatric falls, chemical ingestion) | **0 ms** (design target)               | ❌ None (100% Offline)            |
+| **Generative (Server-Side Proxy)** | Complex, open-ended medical queries outside the 12 primary protocols                                                                                                              | Several seconds (Groq Cloud dependent) | ✅ Yes (via Secure Route Handler) |
 
 _Values designated as "design targets" reflect architectural engineering parameters (Next.js 15 + Web Speech API + Screen Wake Lock API + Route Handler Proxy) rather than third-party clinical benchmarks and may vary across specific hardware and operating environments._
 
@@ -35,8 +36,9 @@ _Values designated as "design targets" reflect architectural engineering paramet
 │ - Web Speech API: TTS (speechSynthesis)                      │
 │ - Screen Wake Lock API + navigator.vibrate                   │
 │ - LocalStorage, getUserMedia (audio focus management)        │
-│ - Adaptive listening windows (Desktop: Continuous / Mobile:  │
-│   Single-utterance window with silent error recovery)        │
+│ - Persistent Hands-Free Lifecycle (Continuous auto-resuming  │
+│   background listening across Desktop & Mobile with          │
+│   Voice Barge-In)                                            │
 └──────────────────────────────┬───────────────────────────────┘
                                │ HTTPS (TTS Audio Frames)
                                ▼
@@ -64,7 +66,7 @@ _Values designated as "design targets" reflect architectural engineering paramet
 
 | Architectural Tier | Component           | Standard / API Spec          | System Responsibility                                           |
 | ------------------ | ------------------- | ---------------------------- | --------------------------------------------------------------- |
-| 1. Client          | Web Speech STT      | W3C Web Speech API           | Continuous / semi-continuous recognition for `pl-PL` & `en-US`  |
+| 1. Client          | Web Speech STT      | W3C Web Speech API           | Persistent Hands-Free Lifecycle recognition (`pl-PL` & `en-US`) |
 | 1. Client          | Web Speech TTS      | W3C Web Speech API           | Zero-latency local speech synthesis for 112 code & CPR commands |
 | 1. Client          | Screen Wake Lock    | W3C Screen Wake Lock API     | Prevents mobile screen sleep during chest compressions          |
 | 1. Client          | Vibration Telemetry | W3C Vibration API            | Haptic CPR metronome pulse at 110 BPM (45 ms pulse duration)    |
@@ -128,7 +130,7 @@ Consequently, the 12 core emergency protocols are **fully hardcoded on the clien
 - **Zero Third-Party Data Transfer:** The deterministic emergency engine operates locally without transmitting telemetry abroad. Only non-deterministic queries routed through the server proxy reach Groq Cloud.
 - **Medical Disclaimers:** Explicit safety boundaries are prominently displayed in the primary view and footer components.
 
-### 4.3 Emergency Services Bridge (E911 / 112 Compliance)
+### 4.3 Emergency Services Bridge (112 Compliance)
 
 - LifeLine Voice **augments, but never replaces** professional emergency services.
 - A persistent one-tap emergency call bridge (`tel:112`) remains accessible on all viewports.
@@ -197,7 +199,7 @@ LifeLine Voice occupies an unoccupied **white space** in emergency tech: it is t
 | **Q1 2027**    | Crooze Rescue API (Netherlands) & UK 999 API Direct Integration              | Multi-jurisdiction automatic tele-dispatch coordination.           |
 | **Q2 2027**    | Real-Time Wearable Sensor Fusion (Apple Watch & Pixel Watch HR / SpO₂)       | Automated physiological arrest detection and metronome syncing.    |
 | **Q3 2027**    | CE MDR Class I Certification (Non-Invasive Information Device)               | Regulatory approval path toward professional paramedic deployment. |
-| **Q3 2027**    | Expanded 12+ Rescue Protocols (Hypothermia, Anaphylaxis, Chemical Ingestion) | Extended clinical coverage aligned with ERC 2025 guidelines.       |
+| **Q3 2027**    | Expanded 12+ Rescue Protocols (Hypothermia, Anaphylaxis)                      | Extended clinical coverage aligned with ERC 2025 guidelines.       |
 
 ---
 
@@ -212,7 +214,7 @@ The high-level data flow and multi-tier system topology (Client → Edge → Clo
 LifeLine Voice was architected and developed by **Adam Gierczak** as an independent solo project, supported by specialized AI engineering agents:
 
 - **v0.dev** — Rapid UI scaffolding & high-contrast styling.
-- **GenSpark** — Deep competitive research and literature synthesis.
+- **Genspark** — Deep competitive research and literature synthesis.
 - **ChatGPT & Claude** — Low-latency audio architecture, state-machine design, and deterministic rescue engine logic.
 
 Built for the **AI Builders Hackathon 2026: Solving the Paradox of Intelligence Systems — The Limits of Foundation Models**.

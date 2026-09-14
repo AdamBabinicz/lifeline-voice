@@ -1,5 +1,8 @@
 # ⚡ LifeLine Voice — Emergency Response Command
 
+**Version:** 1.0 (Hackathon Prototype — AI Builders Hackathon 2026)  
+**Date:** September 10, 2026
+
 <p align="center">
   <a href="https://lifeline-command.netlify.app">
     <img src="docs/lifeline-banner-1200x630.png" alt="LifeLine Voice — Emergency first aid, voice-controlled. Zero latency. | 0.3s FCP · WCAG AA 100/100 · WebMCP 3/3 · 110 BPM metronome · Hands-free STT/TTS · Secure server-side proxy" width="100%">
@@ -8,9 +11,9 @@
 
 > **Hands-Free, Real-Time Emergency First Aid Dispatcher** — powered by ultra-low-latency LLMs, Web Speech architecture, and sensory hardware telemetry.
 
-Built for the **AI Builders Hackathon: Solving the Paradox of Intelligence Systems — The Limits of Foundation Models**.
+Built for the **AI Builders Hackathon 2026: Solving the Paradox of Intelligence Systems — The Limits of Foundation Models**.
 
-> ⚠️ **Safety notice:** LifeLine Voice is a hackathon prototype and does **not** replace emergency dispatchers, certified first-aid guidance, or professional medical care. In a real emergency, always call your local emergency number (112 in the EU) first.
+> ⚠️ **Safety Notice:** LifeLine Voice is a hackathon prototype and does **not** replace emergency dispatchers, certified first responders, or professional medical care. In a real emergency, always call emergency services first (112 in the EU, 911 in the USA).
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Next.js 15](https://img.shields.io/badge/Next.js-15-black?logo=nextdotjs&logoColor=white)
@@ -23,6 +26,7 @@ Built for the **AI Builders Hackathon: Solving the Paradox of Intelligence Syste
 
 - 📺 **Watch the Video Presentation:** [LifeLine Voice — Video Presentation](https://www.youtube.com/watch?v=e7ny73qZxac)
 - 🌐 **Launch the Live Emergency Command:** [lifeline-command.netlify.app](https://lifeline-command.netlify.app)
+- 📜 **Technical Whitepaper:** [Cross-Platform & Mobile Architecture](docs/TECHNICAL_WHITEPAPER.md)
 
 ---
 
@@ -65,13 +69,13 @@ State-of-the-art Foundation Models (LLMs) possess vast medical intelligence, yet
 │              HYBRID DUAL-ENGINE DISPATCH LAYER              │
 ├──────────────────────────────┼──────────────────────────────┤
 │  CRITICAL PROTOCOLS          │  COMPLEX MEDICAL Q&A         │
-│  • Sudden Cardiac Arrest     │  • "Nosebleed bleeding"      │
+│  • Sudden Cardiac Arrest     │  • "Nosebleed"               │
 │  • Severe Choking            │  • "Chemical burns"          │
 │  • Arterial Bleeding         │  • "Diabetic shock"          │
 ├──────────────────────────────┼──────────────────────────────┤
 │  Local Deterministic         │  Secure Server-Side Proxy    │
-│  Rescue Protocol (no network)│  Next.js Route Handler proxy │
-│                              │  Prompt Guardrails · 3 snt.  │
+│  Rescue Protocol (offline)   │  Next.js Route Handler proxy │
+│                              │  Guardrails · 3 sentences    │
 │                              │  jewelry · ice · no vomiting │
 └──────────────┴──────────────────────────────┴───────────────┘
                │                              │
@@ -102,13 +106,13 @@ LifeLine Voice is designed as a **safety-first system**: the generative model is
 
 Mobile operating systems enforce strict sandbox and power-saving policies that break standard browser AI workflows. LifeLine Voice incorporates dedicated mobile-hardened countermeasures:
 
-| Challenge on Mobile       | System Failure Without Architecture                                                         | LifeLine Voice Solution                                                                                                             |
-| ------------------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Continuous Listening      | Mobile OS forcibly kills the microphone after 3–5 s of silence (no-speech / aborted crash). | Discrete adaptive windows: desktop runs continuous listening; mobile switches to single-utterance windows with silent error reset.  |
-| iOS Audio Autoplay Policy | Safari blocks `speechSynthesis` when triggered asynchronously by an AI API response.        | User-gesture audio unlock: the first tap triggers a silent synthetic utterance, priming the iOS audio engine for hands-free speech. |
-| Mobile Screen Timeout     | Phones dim and sleep after ~30 s of inactivity, locking the rescuer out during CPR.         | Auto-resuming Screen Wake Lock: a `visibilitychange` listener re-acquires the screen lock whenever the app regains focus.           |
-| 300 ms Tap Latency        | Mobile browsers delay touch events to detect double taps.                                   | `touch-action: manipulation` enforced globally on all emergency controls for immediate, tap-delay-free touch response.              |
-| Speaker Echo & Monologue Lock | Device speaker loops into the microphone triggering infinite speech feedback; rescuer cannot interrupt long medical text. | Real-Time Voice Barge-In & Intent Gating: incoming audio is matched against rescue intents in real-time (`interimResults: true`). Any new imperative command immediately cancels ongoing speech (`speechSynthesis.cancel()`), while self-echo is silently suppressed. |
+| Challenge on Mobile           | System Failure Without Architecture                                                                                       | LifeLine Voice Solution                                                                                                                                                  |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Continuous Hands-Free         | Mobile OS limits background speech sessions after silence timeouts, cutting off rescuers.                                 | Persistent Hands-Free Lifecycle: continuous auto-resuming background listening (`userWantsListeningRef`) keeping mic armed during active CPR without touching the phone. |
+| iOS Audio Autoplay Policy     | Safari blocks `speechSynthesis` when triggered asynchronously by an AI API response.                                      | User-gesture audio unlock: the first tap triggers a silent synthetic utterance, priming the iOS audio engine for hands-free speech.                                      |
+| Mobile Screen Timeout         | Phones dim and sleep after ~30 s of inactivity, locking the rescuer out during CPR.                                       | Auto-resuming Screen Wake Lock: a `visibilitychange` listener re-acquires the screen lock whenever the app regains focus.                                                |
+| 300 ms Tap Latency            | Mobile browsers delay touch events to detect double taps.                                                                 | `touch-action: manipulation` enforced globally on all emergency controls for immediate, tap-delay-free touch response.                                                   |
+| Speaker Echo & Monologue Lock | Device speaker loops into the microphone triggering infinite speech feedback; rescuer cannot interrupt long medical text. | Real-Time Voice Barge-In & Intent Gating: new imperative commands instantly cancel ongoing speech (`speechSynthesis.cancel()`); self-echo silently suppressed.           |
 
 ## 🚀 Key Features
 
@@ -130,7 +134,7 @@ Core life-threatening physical emergencies never wait for cloud network round-tr
 4. **Unconsciousness / Coma:** 10-second triple-sensory breathing assessment (look, listen, feel) and recovery position.
 5. **Pediatric Fall & Head Trauma:** Strict cervical spine stabilization, checking for critical red flags (loss of consciousness, vomiting, abnormal drowsiness, absence of crying).
 6. **Chemical / Detergent Ingestion (Laundry Pods):** **Strict prohibition of inducing vomiting** (preventing chemical foaming, esophageal re-burning, and lung flooding), oral water rinse, and upright positioning.
-7. **Insect Sting in Mouth / Throat:** Imminent airway obstruction warning (<60s), immediate 112 dispatch, sucking ice cubes/cold water to retard internal edema, CPR readiness.
+7. **Insect Sting in Mouth / Throat:** Imminent airway obstruction warning (<60 s), immediate 112 dispatch, sucking ice cubes/cold water to slow internal edema, CPR readiness.
 8. **Insect Sting on Skin:** Mechanical stinger scraping with a card/fingernail (never squeezing with tweezers to avoid venom injection), cold compress.
 9. **Severe Thermal Burns:** 15–20 min cooling under clean running tap water, **immediate removal of rings, watches, and tight clothing before massive tissue edema**, loose sterile covering, never popping blisters.
 10. **Epileptic Seizures & Convulsions:** Protecting head with soft clothing, **strictly forbidding inserting anything into the mouth**, no physical restraint during convulsions.
@@ -140,8 +144,8 @@ Core life-threatening physical emergencies never wait for cloud network round-tr
 ### 🔊 Phonetic Speech Normalization (TTS)
 
 Maintains optimal visual legibility on screen while ensuring natural auditory delivery:
-- **Visual Display:** High-contrast, minimal digits (`112`, `1.`, `2.`, `110 BPM`, `15-20 min`).
-- **Acoustic Speech:** Synthesizer phonetically expands numbers and emergency codes to avoid robotic artifacts (PL: *"sto dwanaście"*, *"Po pierwsze"*, *"er-ka-o"* / EN: *"nine one one or one one two"*, *"Step one"*, *"C-P-R"*).
+- **Visual Display:** High-contrast, minimal digits (`112`, `1.`, `2.`, `110 BPM`, `15–20 min`).
+- **Acoustic Speech:** Synthesizer phonetically expands numbers and emergency codes to avoid robotic artifacts (PL: *"sto dwanaście"*, *"Po pierwsze"*, *"er-ka-o"* / EN: *"one one two"*, *"Step one"*, *"C-P-R"*).
 
 ### 🔒 Secure Server-Side AI Proxy (Groq Llama 3.1)
 
@@ -171,6 +175,8 @@ Native Screen Wake Lock API integration with auto-recovery on `visibilitychange`
 ## ⚡ Performance, Accessibility & Quality Standards
 
 LifeLine Voice is engineered for high-stress, life-critical scenarios where every millisecond and visual clarity matter:
+
+_All performance metrics in this section are **design targets** — architectural engineering parameters pending formal empirical verification (see the [Technical Whitepaper](docs/TECHNICAL_WHITEPAPER.md))._
 
 ### ♿ Accessibility (100/100 WCAG AA)
 
@@ -229,7 +235,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 | Judging Criteria               | How LifeLine Voice Solves It                                                                                                                                                               |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Solving the Paradox (20%)      | Solves the latency, chattiness, and hallucination paradox by implementing instant Voice Barge-In, acoustic feedback suppression, phonetic TTS normalization, and a 12-protocol deterministic emergency catalog (0 ms local latency) for life-critical physical scenarios. |
+| Solving the Paradox (20%)      | Solves the latency, chattiness, and disembodied-mind paradoxes by implementing instant Voice Barge-In, acoustic feedback suppression, phonetic TTS normalization, and a 12-protocol deterministic emergency catalog (0 ms local latency) for life-critical physical scenarios. |
 | Technical Implementation (20%) | Clean hybrid architecture: Web Speech STT/TTS + secure server-side Groq proxy (Route Handler) + auto-resuming Mobile Wake Lock + context-locked metronome.                                 |
 | Innovation & Creativity (20%)  | Moves away from generic chatbots toward hands-free sensory dispatch — plus a constrained emergency prompt that teaches non-obvious survival steps.                                         |
 | Design & UX (20%)              | High-contrast Swiss-Brutalist emergency typography designed for legibility during adrenaline-fueled panic.                                                                                 |
@@ -237,7 +243,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 👤 Credits
 
-LifeLine Voice was developed by **Adam Gierczak** as a solo project, leveraging a specialized AI-assisted workflow including v0.dev (UI scaffolding), GenSpark (research), ChatGPT and Claude (logic & architecture).
+LifeLine Voice was developed by **Adam Gierczak** ([GitHub: @AdamBabinicz](https://github.com/AdamBabinicz)) as a solo project, leveraging a specialized AI-assisted workflow including v0.dev (UI scaffolding), Genspark (research), ChatGPT and Claude (logic & architecture).
 
 ## 📜 License
 
