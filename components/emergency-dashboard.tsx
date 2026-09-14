@@ -76,10 +76,10 @@ export function EmergencyDashboard() {
   const speechStartTimeRef = useRef<number>(0);
   const isSpeakingRef = useRef<boolean>(false);
 
-  // Bufor gromadzenia pełnych wypowiedzi (zapobiega ucinaniu po jednym słowie)
+  // Bufor opóźniający dla gromadzenia pełnych wypowiedzi (np. "dziecko połknęło kapsułkę...")
   const interimDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Trwała flaga intencji użytkownika
+  // Flaga trybu Hands-Free: dopóki użytkownik sam nie wyłączy nasłuchu, mikrofon czuwa non-stop
   const userWantsListeningRef = useRef<boolean>(false);
 
   // Stabilna referencja do wywoływania komend
@@ -139,6 +139,41 @@ export function EmergencyDashboard() {
     }
   }, []);
 
+  /**
+   * Filtr Self-Echo: Mikrofon ignoruje słowa wypowiadane przez głośnik telefonu,
+   * ale pozwala ratownikowi wbić się z nową komendą ratunkową (Voice Barge-In).
+   */
+  const isSelfEcho = useCallback(
+    (transcript: string, spokenNormalizedText: string | null): boolean => {
+      if (!spokenNormalizedText || !transcript) return false;
+      const cleanTranscript = transcript
+        .toLowerCase()
+        .replace(/[^a-z0-9ąćęłńóśźż\s]/gi, "")
+        .trim();
+      const cleanSpoken = spokenNormalizedText
+        .toLowerCase()
+        .replace(/[^a-z0-9ąćęłńóśźż\s]/gi, "")
+        .trim();
+
+      if (!cleanTranscript || !cleanSpoken) return false;
+
+      // Zawieranie całej frazy w mowie lektora
+      if (cleanSpoken.includes(cleanTranscript)) return true;
+
+      // Sprawdzenie korelacji słów
+      const transcriptWords = cleanTranscript
+        .split(/\s+/)
+        .filter((w) => w.length > 2);
+      if (transcriptWords.length === 0) return false;
+
+      const matchCount = transcriptWords.filter((w) =>
+        cleanSpoken.includes(w),
+      ).length;
+      return matchCount / transcriptWords.length >= 0.4;
+    },
+    [],
+  );
+
   const speakInstruction = useCallback(
     (text: string) => {
       if (typeof window === "undefined" || !("speechSynthesis" in window))
@@ -168,7 +203,7 @@ export function EmergencyDashboard() {
         // Ignoruj
       }
 
-      // Miękki przecinek zapobiega ucinaniu pierwszej głoski na urządzeniach mobilnych
+      // Miękki przecinek daje przetwornikowi audio 50ms buforu na czysty start bez ucinania litery "P"
       const safeSpeechText = ", " + speechText;
       const utterance = new SpeechSynthesisUtterance(safeSpeechText);
       activeUtteranceRef.current = utterance;
@@ -354,10 +389,20 @@ export function EmergencyDashboard() {
       if (!lower || lower.length < 3) return;
 
       const now = Date.now();
+
+      // Jeśli lektor aktualnie mówi, filtrujemy echo z własnego głośnika
+      if (isSpeakingRef.current) {
+        if (isSelfEcho(lower, lastSpokenNormalizedTextRef.current)) {
+          return;
+        }
+      }
+
       const result = analyzeRescueQuery(transcript, locale, t);
 
       if (result.type === "unknown") {
-        setLastUserQuery(transcript);
+        if (!isSpeakingRef.current) {
+          setLastUserQuery(transcript);
+        }
         return;
       }
 
@@ -374,22 +419,24 @@ export function EmergencyDashboard() {
         (currentActionKey === "start_cpr" &&
           lastActionKeyRef.current === "cpr");
 
+      // Blokada zapętlania tej samej procedury
+      if (isSameAction && isSpeakingRef.current) {
+        return;
+      }
+
       const timeSinceLastAction = now - lastActionTimeRef.current;
       if (isSameAction && timeSinceLastAction < 2500) {
         return;
       }
 
-      // OPCJA 1: Sukces rozpoznania komendy – zamykamy sesję nasłuchu (koniec niechcianych piknięć Androida)
-      userWantsListeningRef.current = false;
-      setIsListening(false);
-      if (interimDebounceRef.current) {
-        clearTimeout(interimDebounceRef.current);
-        interimDebounceRef.current = null;
-      }
-      try {
-        recognitionRef.current?.stop();
-      } catch {
-        // Ignoruj
+      // VOICE BARGE-IN: Użytkownik wydał nowe polecenie ratunkowe podczas mowy lektora -> natychmiast uciszamy lektora!
+      if (isSpeakingRef.current && !isSameAction) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch {
+          // Ignoruj
+        }
+        isSpeakingRef.current = false;
       }
 
       setLastUserQuery(transcript);
@@ -440,7 +487,7 @@ export function EmergencyDashboard() {
         return;
       }
     },
-    [locale, speakInstruction, t, toggleLocaleFromProvider],
+    [isSelfEcho, locale, speakInstruction, t, toggleLocaleFromProvider],
   );
 
   useEffect(() => {
@@ -483,10 +530,12 @@ export function EmergencyDashboard() {
         finalTranscript.trim() || interimTranscript.trim();
       if (!latestCandidate) return;
 
-      // Zawsze na bieżąco prezentujemy pełne, rosnące zdanie w pasku stanu
-      setLastUserQuery(latestCandidate);
+      // Zawsze na bieżąco prezentujemy pełne zdanie w pasku
+      if (!isSpeakingRef.current) {
+        setLastUserQuery(latestCandidate);
+      }
 
-      // Jeśli fraza została sfinalizowana przez silnik mowy
+      // Finał frazy -> wykonaj natychmiast
       if (finalTranscript.trim()) {
         if (interimDebounceRef.current) {
           clearTimeout(interimDebounceRef.current);
@@ -496,7 +545,7 @@ export function EmergencyDashboard() {
         return;
       }
 
-      // Reakcja w 0ms na natychmiastowe komendy 1-słowne
+      // Natychmiastowe komendy ratunkowe (0ms)
       const quickLower = latestCandidate.toLowerCase().trim();
       const isUrgent = [
         "stop",
@@ -517,7 +566,7 @@ export function EmergencyDashboard() {
         return;
       }
 
-      // Bufor 380ms pozwalający użytkownikowi dokończyć wielowyrazowe zdanie
+      // Bufor 380ms pozwalający dokończyć wielowyrazowe zdanie
       if (interimDebounceRef.current) {
         clearTimeout(interimDebounceRef.current);
       }
@@ -538,9 +587,17 @@ export function EmergencyDashboard() {
     };
 
     recognition.onend = () => {
-      // OPCJA 1: Koniec sesji (np. po ciszy lub obsłużeniu komendy) wygasza nasłuch bez pętli restartów
-      userWantsListeningRef.current = false;
-      setIsListening(false);
+      // HANDS-FREE: Dopóki użytkownik sam nie wyłączy nasłuchu przyciskiem, smartfon czuwa ciągle w tle
+      if (userWantsListeningRef.current) {
+        try {
+          recognition.start();
+          setIsListening(true);
+        } catch {
+          // Ignoruj błędy restartu
+        }
+      } else {
+        setIsListening(false);
+      }
     };
 
     recognitionRef.current = recognition;
@@ -566,6 +623,7 @@ export function EmergencyDashboard() {
     }
 
     if (userWantsListeningRef.current) {
+      // Świadome wyłączenie nasłuchu przez użytkownika
       userWantsListeningRef.current = false;
       setIsListening(false);
       if (interimDebounceRef.current) {
@@ -581,6 +639,7 @@ export function EmergencyDashboard() {
       }
       isSpeakingRef.current = false;
     } else {
+      // Uruchomienie trybu Hands-Free
       userWantsListeningRef.current = true;
       setErrorMessage(null);
       try {
