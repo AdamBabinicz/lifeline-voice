@@ -17,12 +17,14 @@ const geistMono = Geist_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
   display: "swap",
+  preload: true,
 });
 
 export const viewport: Viewport = {
-  themeColor: "#ff0000",
+  themeColor: "#0a0a0a",
   width: "device-width",
   initialScale: 1,
+  maximumScale: 5,
 };
 
 const SITE_URL = "https://lifeline-command.netlify.app";
@@ -231,6 +233,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pl" suppressHydrationWarning>
+      <head>
+        {/* ELIMINACJA 460 MS OPÓŹNIENIA RENDEROWANIA (PRECONNECT DLA GTM) */}
+        <link
+          rel="preconnect"
+          href="https://www.googletagmanager.com"
+          crossOrigin="anonymous"
+        />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+      </head>
       <body
         className={`${inter.variable} ${geistMono.variable} font-sans antialiased`}
         suppressHydrationWarning
@@ -241,10 +252,10 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
 
-        {/* GOOGLE CONSENT MODE V2 - INITIALIZACJA BEZ BŁĘDU HYDRACJI #418 */}
+        {/* GOOGLE CONSENT MODE V2 - PRZENIESIONY NA LAZYONLOAD DLA UWOLNIENIA WĄTKU GŁÓWNEGO I LCP */}
         <Script
           id="google-consent-mode-default"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];
