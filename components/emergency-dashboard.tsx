@@ -68,20 +68,20 @@ export function EmergencyDashboard() {
   const recognitionRef = useRef<any>(null);
   const wakeLockRef = useRef<any>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const audioPrimedRef = useRef<boolean>(false);
   const activeUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
-  const speakTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const watchdogTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastSpokenTextRef = useRef<string | null>(null);
+  const lastSpokenNormalizedTextRef = useRef<string | null>(null);
+  const lastRawInstructionTextRef = useRef<string | null>(null);
   const lastActionKeyRef = useRef<string | null>(null);
   const lastActionTimeRef = useRef<number>(0);
+  const speechStartTimeRef = useRef<number>(0);
   const speechEndTimeRef = useRef<number>(0);
-  const lastProcessedTranscriptRef = useRef<string>("");
-  const lastProcessedTranscriptTimeRef = useRef<number>(0);
   const isSpeakingRef = useRef<boolean>(false);
   const isThinkingRef = useRef<boolean>(false);
-  const isCprContext = selected === "cpr";
 
+  // Referencja zapobiegająca restartom SpeechRecognition przy re-renderach wywołanych stanem (np. metronomem)
+  const handleVoiceCommandRef = useRef<(transcript: string) => void>(() => {});
+
+  const isCprContext = selected === "cpr";
   const t = translations[locale] as Record<string, string>;
 
   const protocols: Protocol[] = [
@@ -130,46 +130,33 @@ export function EmergencyDashboard() {
       ) {
         audioContextRef.current.resume();
       }
-
-      // Odblokowanie syntezy mowy wykonujemy tylko RAZ, aby nie zaśmiecać kolejki audio smartfona
-      if (
-        !audioPrimedRef.current &&
-        typeof window !== "undefined" &&
-        "speechSynthesis" in window
-      ) {
-        if (!window.speechSynthesis.speaking) {
-          const silentUtterance = new SpeechSynthesisUtterance(" ");
-          silentUtterance.volume = 0.01;
-          window.speechSynthesis.speak(silentUtterance);
-        }
-        audioPrimedRef.current = true;
-      }
     } catch {
       // Ignoruj
     }
   }, []);
 
   /**
-   * Sprawdza, czy rozpoznany tekst z mikrofonu nie jest echem głosu lektora wydobywającego się z głośnika
+   * Sprawdza, czy rozpoznany tekst z mikrofonu nie jest echem głosu lektora wydobywającego się z głośnika.
+   * Porównuje ze znormalizowanym tekstem (ze słowami "po pierwsze", "sto dwanaście" itp.).
    */
   const isSelfEcho = useCallback(
-    (transcript: string, spokenText: string | null): boolean => {
-      if (!spokenText || !transcript) return false;
+    (transcript: string, spokenNormalizedText: string | null): boolean => {
+      if (!spokenNormalizedText || !transcript) return false;
       const cleanTranscript = transcript
         .toLowerCase()
         .replace(/[^a-z0-9ąćęłńóśźż\s]/gi, "")
         .trim();
-      const cleanSpoken = spokenText
+      const cleanSpoken = spokenNormalizedText
         .toLowerCase()
         .replace(/[^a-z0-9ąćęłńóśźż\s]/gi, "")
         .trim();
 
       if (!cleanTranscript || !cleanSpoken) return false;
 
-      // Bezpośrednie zawieranie frazy lektora
+      // Bezpośrednie zawieranie transkrypcji w mowie lektora
       if (cleanSpoken.includes(cleanTranscript)) return true;
 
-      // Sprawdzenie nakładania słów (jeśli ponad 60% słów transkryptu jest częścią mowy lektora)
+      // Sprawdzenie nakładania słów
       const transcriptWords = cleanTranscript
         .split(/\s+/)
         .filter((w) => w.length > 2);
@@ -178,7 +165,7 @@ export function EmergencyDashboard() {
       const matchCount = transcriptWords.filter((w) =>
         cleanSpoken.includes(w),
       ).length;
-      return matchCount / transcriptWords.length >= 0.6;
+      return matchCount / transcriptWords.length >= 0.5;
     },
     [],
   );
@@ -190,148 +177,102 @@ export function EmergencyDashboard() {
 
       if (!text || !text.trim()) return;
 
-      // OCHRONA PRZED ZAJĄKNIĘCIEM: Jeśli ten sam komunikat jest już odtwarzany, nie przerywaj i nie zaczynaj od nowa!
+      const now = Date.now();
+      const speechText = normalizeSpeechForTTS(text, locale);
+
+      // TWARDA BLOKADA ZAJĄKNIĘCIA:
+      // Jeśli lektor aktualnie mówi lub zaczął mówić ten sam komunikat w ciągu ostatnich 3,5 sekundy - NIE PRZERYWAJ!
       if (
-        isSpeakingRef.current &&
-        lastSpokenTextRef.current === text &&
-        activeUtteranceRef.current
+        lastSpokenNormalizedTextRef.current === speechText &&
+        (isSpeakingRef.current || now - speechStartTimeRef.current < 3500)
       ) {
         return;
       }
 
-      if (speakTimeoutRef.current) {
-        clearTimeout(speakTimeoutRef.current);
-        speakTimeoutRef.current = null;
+      // Rejestrujemy natychmiast atomową blokadę
+      speechStartTimeRef.current = now;
+      isSpeakingRef.current = true;
+      lastRawInstructionTextRef.current = text;
+      lastSpokenNormalizedTextRef.current = speechText;
+
+      try {
+        window.speechSynthesis.cancel();
+      } catch {
+        // Ignoruj
       }
 
-      if (watchdogTimeoutRef.current) {
-        clearTimeout(watchdogTimeoutRef.current);
-        watchdogTimeoutRef.current = null;
-      }
+      const utterance = new SpeechSynthesisUtterance(speechText);
+      activeUtteranceRef.current = utterance;
+      (window as any).__lifelineActiveUtterance = utterance;
 
-      const wasSpeaking =
-        isSpeakingRef.current ||
-        window.speechSynthesis.speaking ||
-        window.speechSynthesis.pending;
+      utterance.lang = locale === "pl" ? "pl-PL" : "en-US";
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
 
-      if (wasSpeaking) {
-        try {
-          window.speechSynthesis.cancel();
-        } catch {
-          // Ignoruj
+      try {
+        const voices = window.speechSynthesis.getVoices();
+        const targetLang = locale === "pl" ? "pl" : "en";
+        const matchedVoice =
+          voices.find(
+            (v) =>
+              v.lang.toLowerCase().startsWith(targetLang) &&
+              (v.localService || v.default),
+          ) || voices.find((v) => v.lang.toLowerCase().startsWith(targetLang));
+
+        if (matchedVoice) {
+          utterance.voice = matchedVoice;
         }
+      } catch {
+        // Ignoruj
       }
 
-      const executeSpeak = () => {
+      utterance.onstart = () => {
         isSpeakingRef.current = true;
-        lastSpokenTextRef.current = text;
+      };
 
-        const speechText = normalizeSpeechForTTS(text, locale);
-        const utterance = new SpeechSynthesisUtterance(speechText);
-
-        // Podwójna referencja zapobiegająca Garbage Collectorowi w mobilnym Safari/Chrome
-        activeUtteranceRef.current = utterance;
-        (window as any).__lifelineActiveUtterance = utterance;
-
-        utterance.lang = locale === "pl" ? "pl-PL" : "en-US";
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
-
-        try {
-          const voices = window.speechSynthesis.getVoices();
-          const targetLang = locale === "pl" ? "pl" : "en";
-          const matchedVoice =
-            voices.find(
-              (v) =>
-                v.lang.toLowerCase().startsWith(targetLang) &&
-                (v.localService || v.default),
-            ) ||
-            voices.find((v) => v.lang.toLowerCase().startsWith(targetLang));
-
-          if (matchedVoice) {
-            utterance.voice = matchedVoice;
-          }
-        } catch {
-          // Ignoruj
-        }
-
-        utterance.onstart = () => {
-          isSpeakingRef.current = true;
-        };
-
-        utterance.onend = () => {
-          // Reaguj tylko, jeśli to zdarzenie dotyczy aktywnej instancji
-          if (activeUtteranceRef.current === utterance) {
-            activeUtteranceRef.current = null;
-            (window as any).__lifelineActiveUtterance = null;
-            speechEndTimeRef.current = Date.now();
-            if (watchdogTimeoutRef.current) {
-              clearTimeout(watchdogTimeoutRef.current);
-              watchdogTimeoutRef.current = null;
-            }
-            setTimeout(() => {
-              if (activeUtteranceRef.current === null) {
-                isSpeakingRef.current = false;
-              }
-            }, 400);
-          }
-        };
-
-        utterance.onerror = (event: any) => {
-          // Zdarzenia 'interrupted' lub 'canceled' powstają naturalnie przy przejęciu mowy (barge-in)
-          if (activeUtteranceRef.current === utterance) {
-            activeUtteranceRef.current = null;
-            (window as any).__lifelineActiveUtterance = null;
-            speechEndTimeRef.current = Date.now();
-            if (watchdogTimeoutRef.current) {
-              clearTimeout(watchdogTimeoutRef.current);
-              watchdogTimeoutRef.current = null;
-            }
-            setTimeout(() => {
-              if (activeUtteranceRef.current === null) {
-                isSpeakingRef.current = false;
-              }
-            }, 200);
-          }
-        };
-
-        // Strażnik czasowy na smartfony (gdyby silnik mobilny nie wywołał onend)
-        const estimatedDurationMs = Math.max(
-          3500,
-          speechText.length * 90 + 2000,
-        );
-        watchdogTimeoutRef.current = setTimeout(() => {
-          if (activeUtteranceRef.current === utterance) {
-            activeUtteranceRef.current = null;
-            (window as any).__lifelineActiveUtterance = null;
-            isSpeakingRef.current = false;
-            speechEndTimeRef.current = Date.now();
-          }
-        }, estimatedDurationMs);
-
-        try {
-          window.speechSynthesis.speak(utterance);
-        } catch {
-          isSpeakingRef.current = false;
+      utterance.onend = () => {
+        if (activeUtteranceRef.current === utterance) {
           activeUtteranceRef.current = null;
           (window as any).__lifelineActiveUtterance = null;
+          speechEndTimeRef.current = Date.now();
+          setTimeout(() => {
+            if (activeUtteranceRef.current === null) {
+              isSpeakingRef.current = false;
+            }
+          }, 350);
         }
       };
 
-      // Bufor 50ms po cancel() pozwala sterownikowi audio smartfona zwolnić bufor bez ucinania pierwszej sylaby
-      if (wasSpeaking) {
-        speakTimeoutRef.current = setTimeout(executeSpeak, 50);
-      } else {
-        executeSpeak();
+      utterance.onerror = () => {
+        if (activeUtteranceRef.current === utterance) {
+          activeUtteranceRef.current = null;
+          (window as any).__lifelineActiveUtterance = null;
+          speechEndTimeRef.current = Date.now();
+          setTimeout(() => {
+            if (activeUtteranceRef.current === null) {
+              isSpeakingRef.current = false;
+            }
+          }, 150);
+        }
+      };
+
+      try {
+        window.speechSynthesis.speak(utterance);
+      } catch {
+        isSpeakingRef.current = false;
+        activeUtteranceRef.current = null;
+        (window as any).__lifelineActiveUtterance = null;
       }
     },
     [locale],
   );
 
   const repeatLastGuidance = useCallback(() => {
-    if (lastSpokenTextRef.current) {
+    if (lastRawInstructionTextRef.current) {
       lastActionTimeRef.current = Date.now();
-      speakInstruction(lastSpokenTextRef.current);
+      // Wymuszenie powtórzenia poprzez reset czasu blokady
+      speechStartTimeRef.current = 0;
+      speakInstruction(lastRawInstructionTextRef.current);
     }
   }, [speakInstruction]);
 
@@ -456,27 +397,21 @@ export function EmergencyDashboard() {
 
       const now = Date.now();
 
-      // Szybkie odfiltrowanie identycznego transkryptu przychodzącego seriami w ułamkach sekund
-      if (
-        lower === lastProcessedTranscriptRef.current &&
-        now - lastProcessedTranscriptTimeRef.current < 600
-      ) {
-        return;
-      }
-      lastProcessedTranscriptRef.current = lower;
-      lastProcessedTranscriptTimeRef.current = now;
-
-      // Sprawdzenie stanu mowy
+      // Sprawdzenie stanu mowy lektora
       const isSpeaking =
         isSpeakingRef.current ||
+        now - speechStartTimeRef.current < 2500 ||
         (typeof window !== "undefined" &&
           "speechSynthesis" in window &&
           window.speechSynthesis.speaking);
 
-      const isEchoPeriod = isSpeaking || now - speechEndTimeRef.current < 1000;
+      const isEchoPeriod = isSpeaking || now - speechEndTimeRef.current < 1200;
 
-      // Odrzucenie echa lektora z głośnika
-      if (isEchoPeriod && isSelfEcho(lower, lastSpokenTextRef.current)) {
+      // Odrzucenie echa lektora z głośnika (porównanie ze znormalizowanym tekstem)
+      if (
+        isEchoPeriod &&
+        isSelfEcho(lower, lastSpokenNormalizedTextRef.current)
+      ) {
         return;
       }
 
@@ -491,44 +426,31 @@ export function EmergencyDashboard() {
         return;
       }
 
-      // Identyfikator procedury do ochrony przed powtórnym startem
+      // Identyfikator procedury
       const currentActionKey =
         result.command ||
         result.protocolId ||
         result.guidanceKey ||
         result.displayText;
 
-      // Zawsze aktualizujemy wyświetlany tekst na ekranie
-      setLastUserQuery(transcript);
-      setErrorMessage(null);
-
-      // Sprawdzenie tożsamości kontekstu i tekstu do wymówienia
-      const isSameSpokenText =
-        Boolean(result.spokenText) &&
-        result.spokenText === lastSpokenTextRef.current;
-
+      // Sprawdzenie tożsamości akcji (np. cpr i start_cpr to ta sama akcja)
       const isSameAction =
         currentActionKey === lastActionKeyRef.current ||
         (currentActionKey === "cpr" &&
           lastActionKeyRef.current === "start_cpr") ||
         (currentActionKey === "start_cpr" &&
-          lastActionKeyRef.current === "cpr") ||
-        isSameSpokenText;
+          lastActionKeyRef.current === "cpr");
 
       const timeSinceLastAction = now - lastActionTimeRef.current;
-      const timeSinceSpeechEnd = now - speechEndTimeRef.current;
 
-      // OCHRONA PRZED ZAPĘTLANIEM I ZAJĄKNIĘCIAMI:
-      // Jeśli lektor mówi tę samą procedurę LUB minęło za mało czasu od startu/zakończenia mowy:
-      // ignorujemy powtórne wywołanie, aby lektor nie zaczynał zdania od początku!
-      if (
-        isSameAction &&
-        (isSpeaking || timeSinceLastAction < 4000 || timeSinceSpeechEnd < 1200)
-      ) {
+      // ANTY-ZAJĄKNIĘCIE: Jeśli lektor już mówi tę samą procedurę lub została wywołana chwilę wcześniej, ignorujemy!
+      if (isSameAction && (isSpeaking || timeSinceLastAction < 3500)) {
         return;
       }
 
-      // Rejestrujemy nowe wywołanie
+      setLastUserQuery(transcript);
+      setErrorMessage(null);
+
       lastActionKeyRef.current = currentActionKey;
       lastActionTimeRef.current = now;
 
@@ -577,6 +499,12 @@ export function EmergencyDashboard() {
     [isSelfEcho, locale, speakInstruction, t, toggleLocaleFromProvider],
   );
 
+  // Utrzymujemy zawsze najświeższy callback w refie, aby useEffect nasłuchu był w 100% stabilny
+  useEffect(() => {
+    handleVoiceCommandRef.current = handleVoiceCommand;
+  }, [handleVoiceCommand]);
+
+  // Cykl życia SpeechRecognition: inicjalizowany TYLKO przy montowaniu i zmianie języka, wolny od re-renderów
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -593,7 +521,6 @@ export function EmergencyDashboard() {
     recognition.interimResults = true;
     recognition.lang = locale === "pl" ? "pl-PL" : "en-US";
 
-    // Bezpieczne pobieranie wyłącznie najświeższej, pełnej transkrypcji z pojedynczego zdarzenia
     recognition.onresult = (event: any) => {
       let finalTranscript = "";
       let interimTranscript = "";
@@ -612,7 +539,7 @@ export function EmergencyDashboard() {
 
       const candidate = finalTranscript.trim() || interimTranscript.trim();
       if (candidate) {
-        handleVoiceCommand(candidate);
+        handleVoiceCommandRef.current(candidate);
       }
     };
 
@@ -634,17 +561,8 @@ export function EmergencyDashboard() {
       } catch {
         // Ignoruj
       }
-      if (speakTimeoutRef.current) {
-        clearTimeout(speakTimeoutRef.current);
-      }
-      if (watchdogTimeoutRef.current) {
-        clearTimeout(watchdogTimeoutRef.current);
-      }
-      if (typeof window !== "undefined" && "speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
-      }
     };
-  }, [locale, handleVoiceCommand]);
+  }, [locale]);
 
   const toggleListening = useCallback(() => {
     primeAudioContext();
@@ -691,6 +609,8 @@ export function EmergencyDashboard() {
         window.speechSynthesis.cancel();
       }
       isSpeakingRef.current = false;
+      speechStartTimeRef.current = 0;
+      lastActionKeyRef.current = null;
     } else {
       setSelected(id);
       setAiGuidance(null);
