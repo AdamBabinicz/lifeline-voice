@@ -182,9 +182,13 @@ _All performance metrics in this section are **design targets** — architectura
 
 Rigorously tested high-contrast color palette (minimum 5.75:1 contrast ratio), screen-reader semantics, and unobstructed zoom.
 
-### ⚡ Instant Emergency Readiness (0.3s FCP)
+### ⚡ Instant Emergency Readiness & Audit (0.3s FCP · GTmetrix Grade A 100%)
 
-Zero layout shifts (CLS: 0) and sub-second paint times on both desktop and mobile devices.
+Zero layout shifts (CLS: 0) and sub-second paint times on both desktop and mobile devices. Verified by independent audit:
+
+<p align="center">
+  <img src="docs/gtmetrix-100-performance.png" alt="LifeLine Voice — GTmetrix Grade A 100% Performance Audit Report" width="90%">
+</p>
 
 ### 🤖 Agentic Browsing Certified (3/3 WebMCP)
 
