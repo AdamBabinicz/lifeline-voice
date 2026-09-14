@@ -76,7 +76,7 @@ export function EmergencyDashboard() {
   const speechStartTimeRef = useRef<number>(0);
   const isSpeakingRef = useRef<boolean>(false);
 
-  // Bufor opóźniający dla gromadzenia pełnych zdań (nie ucinający po 1 słowie)
+  // Bufor gromadzenia pełnych wypowiedzi (zapobiega ucinaniu po jednym słowie)
   const interimDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   // Trwała flaga intencji użytkownika
@@ -139,41 +139,6 @@ export function EmergencyDashboard() {
     }
   }, []);
 
-  /**
-   * Filtr Self-Echo: Sprawdza, czy rozpoznane słowa pochodzą z głośnika telefonu.
-   * Dzięki temu lektor nie przerywa sam siebie, ale użytkownik MOŻE go przerwać nową komendą!
-   */
-  const isSelfEcho = useCallback(
-    (transcript: string, spokenNormalizedText: string | null): boolean => {
-      if (!spokenNormalizedText || !transcript) return false;
-      const cleanTranscript = transcript
-        .toLowerCase()
-        .replace(/[^a-z0-9ąćęłńóśźż\s]/gi, "")
-        .trim();
-      const cleanSpoken = spokenNormalizedText
-        .toLowerCase()
-        .replace(/[^a-z0-9ąćęłńóśźż\s]/gi, "")
-        .trim();
-
-      if (!cleanTranscript || !cleanSpoken) return false;
-
-      // Zawieranie całej frazy w mowie lektora
-      if (cleanSpoken.includes(cleanTranscript)) return true;
-
-      // Sprawdzenie korelacji słów (jeśli >40% słów transkryptu to słowa z trwającej instrukcji lektora)
-      const transcriptWords = cleanTranscript
-        .split(/\s+/)
-        .filter((w) => w.length > 2);
-      if (transcriptWords.length === 0) return false;
-
-      const matchCount = transcriptWords.filter((w) =>
-        cleanSpoken.includes(w),
-      ).length;
-      return matchCount / transcriptWords.length >= 0.4;
-    },
-    [],
-  );
-
   const speakInstruction = useCallback(
     (text: string) => {
       if (typeof window === "undefined" || !("speechSynthesis" in window))
@@ -184,7 +149,7 @@ export function EmergencyDashboard() {
       const now = Date.now();
       const speechText = normalizeSpeechForTTS(text, locale);
 
-      // Blokada restartu dokładnie tego samego komunikatu w trakcie trwania mowy
+      // Blokada ponownego startu tego samego tekstu w trakcie trwania mowy
       if (
         lastSpokenNormalizedTextRef.current === speechText &&
         (isSpeakingRef.current || now - speechStartTimeRef.current < 2500)
@@ -203,7 +168,7 @@ export function EmergencyDashboard() {
         // Ignoruj
       }
 
-      // Miękki przecinek daje sterownikowi audio smartfona 50ms na stabilne otwarcie bufora bez ucinania litery "P"
+      // Miękki przecinek zapobiega ucinaniu pierwszej głoski na urządzeniach mobilnych
       const safeSpeechText = ", " + speechText;
       const utterance = new SpeechSynthesisUtterance(safeSpeechText);
       activeUtteranceRef.current = utterance;
@@ -389,20 +354,10 @@ export function EmergencyDashboard() {
       if (!lower || lower.length < 3) return;
 
       const now = Date.now();
-
-      // Jeśli lektor mówi: sprawdzamy, czy to echo jego własnego głosu
-      if (isSpeakingRef.current) {
-        if (isSelfEcho(lower, lastSpokenNormalizedTextRef.current)) {
-          return;
-        }
-      }
-
       const result = analyzeRescueQuery(transcript, locale, t);
 
       if (result.type === "unknown") {
-        if (!isSpeakingRef.current) {
-          setLastUserQuery(transcript);
-        }
+        setLastUserQuery(transcript);
         return;
       }
 
@@ -419,24 +374,22 @@ export function EmergencyDashboard() {
         (currentActionKey === "start_cpr" &&
           lastActionKeyRef.current === "cpr");
 
-      // Jeśli to ta sama procedura, a lektor mówi – ignorujemy powtórkę
-      if (isSameAction && isSpeakingRef.current) {
-        return;
-      }
-
       const timeSinceLastAction = now - lastActionTimeRef.current;
       if (isSameAction && timeSinceLastAction < 2500) {
         return;
       }
 
-      // VOICE BARGE-IN: Jeśli lektor mówił poprzednią procedurę, a użytkownik wydał NOWĄ – natychmiast przerywamy starą!
-      if (isSpeakingRef.current && !isSameAction) {
-        try {
-          window.speechSynthesis.cancel();
-        } catch {
-          // Ignoruj
-        }
-        isSpeakingRef.current = false;
+      // OPCJA 1: Sukces rozpoznania komendy – zamykamy sesję nasłuchu (koniec niechcianych piknięć Androida)
+      userWantsListeningRef.current = false;
+      setIsListening(false);
+      if (interimDebounceRef.current) {
+        clearTimeout(interimDebounceRef.current);
+        interimDebounceRef.current = null;
+      }
+      try {
+        recognitionRef.current?.stop();
+      } catch {
+        // Ignoruj
       }
 
       setLastUserQuery(transcript);
@@ -487,7 +440,7 @@ export function EmergencyDashboard() {
         return;
       }
     },
-    [isSelfEcho, locale, speakInstruction, t, toggleLocaleFromProvider],
+    [locale, speakInstruction, t, toggleLocaleFromProvider],
   );
 
   useEffect(() => {
@@ -530,12 +483,10 @@ export function EmergencyDashboard() {
         finalTranscript.trim() || interimTranscript.trim();
       if (!latestCandidate) return;
 
-      // 1. ZAWSZE od razu wyświetlamy pełne, rosnące zdanie na ekranie (widok dla użytkownika)
-      if (!isSpeakingRef.current) {
-        setLastUserQuery(latestCandidate);
-      }
+      // Zawsze na bieżąco prezentujemy pełne, rosnące zdanie w pasku stanu
+      setLastUserQuery(latestCandidate);
 
-      // 2. Jeśli zdarzenie jest sfinalizowane (użytkownik skończył frazę) -> wykonaj natychmiast!
+      // Jeśli fraza została sfinalizowana przez silnik mowy
       if (finalTranscript.trim()) {
         if (interimDebounceRef.current) {
           clearTimeout(interimDebounceRef.current);
@@ -545,7 +496,7 @@ export function EmergencyDashboard() {
         return;
       }
 
-      // 3. Sprawdzenie pilnych 1-słownych komend natychmiastowych (RKO, Stop) – reagują w 0ms
+      // Reakcja w 0ms na natychmiastowe komendy 1-słowne
       const quickLower = latestCandidate.toLowerCase().trim();
       const isUrgent = [
         "stop",
@@ -566,7 +517,7 @@ export function EmergencyDashboard() {
         return;
       }
 
-      // 4. Dla dłuższych zapytań (np. "dziecko połknęło kapsułkę do prania") czekamy 380ms na dokończenie myśli
+      // Bufor 380ms pozwalający użytkownikowi dokończyć wielowyrazowe zdanie
       if (interimDebounceRef.current) {
         clearTimeout(interimDebounceRef.current);
       }
@@ -587,17 +538,9 @@ export function EmergencyDashboard() {
     };
 
     recognition.onend = () => {
-      // Automatyczne wznowienie tylko, jeśli użytkownik nie wyłączył nasłuchu przyciskiem
-      if (userWantsListeningRef.current) {
-        try {
-          recognition.start();
-          setIsListening(true);
-        } catch {
-          // Ignoruj
-        }
-      } else {
-        setIsListening(false);
-      }
+      // OPCJA 1: Koniec sesji (np. po ciszy lub obsłużeniu komendy) wygasza nasłuch bez pętli restartów
+      userWantsListeningRef.current = false;
+      setIsListening(false);
     };
 
     recognitionRef.current = recognition;
