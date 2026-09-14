@@ -76,10 +76,10 @@ export function EmergencyDashboard() {
   const speechStartTimeRef = useRef<number>(0);
   const isSpeakingRef = useRef<boolean>(false);
 
-  // Bufor opóźniający dla gromadzenia pełnych wypowiedzi (np. "dziecko połknęło kapsułkę...")
+  // Bufor gromadzenia pełnych wypowiedzi (zapobiega ucinaniu po jednym słowie)
   const interimDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Flaga trybu Hands-Free: dopóki użytkownik sam nie wyłączy nasłuchu, mikrofon czuwa non-stop
+  // Trwała flaga intencji użytkownika
   const userWantsListeningRef = useRef<boolean>(false);
 
   // Stabilna referencja do wywoływania komend
@@ -623,7 +623,6 @@ export function EmergencyDashboard() {
     }
 
     if (userWantsListeningRef.current) {
-      // Świadome wyłączenie nasłuchu przez użytkownika
       userWantsListeningRef.current = false;
       setIsListening(false);
       if (interimDebounceRef.current) {
@@ -639,7 +638,6 @@ export function EmergencyDashboard() {
       }
       isSpeakingRef.current = false;
     } else {
-      // Uruchomienie trybu Hands-Free
       userWantsListeningRef.current = true;
       setErrorMessage(null);
       try {
@@ -757,9 +755,14 @@ export function EmergencyDashboard() {
             <div className="flex flex-col gap-4 sm:gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-4xl">
                 <div className="mb-2 sm:mb-3 flex flex-wrap items-center gap-2 sm:gap-3">
-                  <h2 className="font-mono text-[10px] sm:text-xs font-bold tracking-[0.15em] sm:tracking-[0.2em] text-primary uppercase">
+                  {/* SEMANTYCZNY BADGE STATUSU ZAMIAST H2 (ELIMINACJA BŁĘDU H2 PRZED H1 W SEO) */}
+                  <span
+                    role="status"
+                    aria-live="polite"
+                    className="inline-block font-mono text-[10px] sm:text-xs font-bold tracking-[0.15em] sm:tracking-[0.2em] text-primary uppercase"
+                  >
                     {currentBadgeTitle}
-                  </h2>
+                  </span>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -771,6 +774,7 @@ export function EmergencyDashboard() {
                   </Button>
                 </div>
 
+                {/* PIERWSZY I GŁÓWNY NAGŁÓWEK STRONY H1 */}
                 <h1 className="font-mono text-xl sm:text-3xl lg:text-5xl font-black uppercase tracking-tight text-foreground leading-[1.15] break-words text-pretty">
                   {preventOrphans(currentInstruction)}
                 </h1>
@@ -780,8 +784,11 @@ export function EmergencyDashboard() {
         </section>
 
         <section aria-labelledby="protocols-heading" className="w-full">
+          {/* PRAWIDŁOWY PODTYTUŁ SEKCJI H2 (UNIEMOŻLIWIA POWTÓRZENIE TREŚCI H1) */}
           <h2 id="protocols-heading" className="sr-only">
-            {t.select_protocol}
+            {t.protocol_cpr
+              ? `${t.protocol_cpr}, ${t.protocol_choking}, ${t.protocol_bleeding}`
+              : t.select_protocol}
           </h2>
           <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
             {protocols.map((protocol) => (
