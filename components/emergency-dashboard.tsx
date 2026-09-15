@@ -75,9 +75,18 @@ export function EmergencyDashboard() {
   const lastActionTimeRef = useRef<number>(0);
   const speechStartTimeRef = useRef<number>(0);
   const isSpeakingRef = useRef<boolean>(false);
+  const speakTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Bufor gromadzenia pełnych wypowiedzi (zapobiega ucinaniu po jednym słowie)
-  const interimDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  // Ochrona przed zduplikowanym wywołaniem komendy
+  const lastProcessedTranscriptRef = useRef<string>("");
+  const lastProcessedTimeRef = useRef<number>(0);
+
+  // Ochrona przed równoległymi zapytaniami do AI
+  const isQueryingAiRef = useRef<boolean>(false);
+  const aiAbortControllerRef = useRef<AbortController | null>(null);
+
+  // Timer ciszy do zakończenia wielowyrazowego zdania
+  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Trwała flaga intencji użytkownika
   const userWantsListeningRef = useRef<boolean>(false);
@@ -140,8 +149,8 @@ export function EmergencyDashboard() {
   }, []);
 
   /**
-   * Filtr Self-Echo: Mikrofon ignoruje słowa wypowiadane przez głośnik telefonu,
-   * ale pozwala ratownikowi wbić się z nową komendą ratunkową (Voice Barge-In).
+   * Filtr Self-Echo: Odrzuca dźwięk z głośnika tylko wtedy, gdy całe wypowiedziane zdanie
+   * to dosłowne powtórzenie lektora.
    */
   const isSelfEcho = useCallback(
     (transcript: string, spokenNormalizedText: string | null): boolean => {
@@ -157,39 +166,68 @@ export function EmergencyDashboard() {
 
       if (!cleanTranscript || !cleanSpoken) return false;
 
-      // Zawieranie całej frazy w mowie lektora
-      if (cleanSpoken.includes(cleanTranscript)) return true;
-
-      // Sprawdzenie korelacji słów
-      const transcriptWords = cleanTranscript
-        .split(/\s+/)
-        .filter((w) => w.length > 2);
-      if (transcriptWords.length === 0) return false;
-
-      const matchCount = transcriptWords.filter((w) =>
-        cleanSpoken.includes(w),
-      ).length;
-      return matchCount / transcriptWords.length >= 0.4;
+      // Jeśli transkrypcja w 85% dosłownie pokrywa się z czytanym tekstem -> to echo
+      return (
+        cleanSpoken.includes(cleanTranscript) && cleanTranscript.length > 8
+      );
     },
     [],
   );
 
   const speakInstruction = useCallback(
-    (text: string) => {
+    (text: string, forceBargeIn: boolean = false) => {
       if (typeof window === "undefined" || !("speechSynthesis" in window))
         return;
 
       if (!text || !text.trim()) return;
 
       const now = Date.now();
-      const speechText = normalizeSpeechForTTS(text, locale);
 
-      // Blokada ponownego startu tego samego tekstu w trakcie trwania mowy
+      // Zamiana formatu "Krok 1:", "Krok 2:" oraz oczyszczenie zduplikowanych liczników
+      let cleanText = text
+        .replace(/\bKrok\s*1\s*:\s*/gi, "1. ")
+        .replace(/\bKrok\s*2\s*:\s*/gi, "2. ")
+        .replace(/\bKrok\s*3\s*:\s*/gi, "3. ")
+        .replace(/\bKrok\s*4\s*:\s*/gi, "4. ")
+        .replace(/\bKrok\s*5\s*:\s*/gi, "5. ")
+        .replace(/\bStep\s*1\s*:\s*/gi, "1. ")
+        .replace(/\bStep\s*2\s*:\s*/gi, "2. ")
+        .replace(/\bStep\s*3\s*:\s*/gi, "3. ")
+        .replace(/\bStep\s*4\s*:\s*/gi, "4. ")
+        .replace(/1\.\s*Po pierwsze,?/gi, "Po pierwsze,")
+        .replace(/(Po pierwsze,?\s*){2,}/gi, "Po pierwsze, ")
+        .replace(/2\.\s*Po drugie,?/gi, "Po drugie,")
+        .replace(/(Po drugie,?\s*){2,}/gi, "Po drugie, ")
+        .replace(/3\.\s*Po trzecie,?/gi, "Po trzecie,")
+        .replace(/(Po trzecie,?\s*){2,}/gi, "Po trzecie, ");
+
+      let speechText = normalizeSpeechForTTS(cleanText, locale)
+        .replace(/(Po pierwsze,?\s*){2,}/gi, "Po pierwsze, ")
+        .replace(/(Po drugie,?\s*){2,}/gi, "Po drugie, ")
+        .replace(/(Po trzecie,?\s*){2,}/gi, "Po trzecie, ")
+        .replace(/(Step one:?\s*){2,}/gi, "Step one: ")
+        .replace(/(Step two:?\s*){2,}/gi, "Step two: ")
+        .trim();
+
+      // Blokada przed zapętlaniem dokładnie tego samego komunikatu
       if (
+        !forceBargeIn &&
         lastSpokenNormalizedTextRef.current === speechText &&
         (isSpeakingRef.current || now - speechStartTimeRef.current < 2500)
       ) {
         return;
+      }
+
+      if (speakTimeoutRef.current) {
+        clearTimeout(speakTimeoutRef.current);
+        speakTimeoutRef.current = null;
+      }
+
+      // Natychmiast zatrzymaj poprzednią mowę lektora
+      try {
+        window.speechSynthesis.cancel();
+      } catch {
+        // Ignoruj
       }
 
       speechStartTimeRef.current = now;
@@ -197,66 +235,65 @@ export function EmergencyDashboard() {
       lastRawInstructionTextRef.current = text;
       lastSpokenNormalizedTextRef.current = speechText;
 
-      try {
-        window.speechSynthesis.cancel();
-      } catch {
-        // Ignoruj
-      }
+      // Bufor 45ms na zresetowanie kolejki syntezatora
+      speakTimeoutRef.current = setTimeout(() => {
+        try {
+          const safeSpeechText = speechText.startsWith(",")
+            ? speechText
+            : ", " + speechText;
+          const utterance = new SpeechSynthesisUtterance(safeSpeechText);
+          activeUtteranceRef.current = utterance;
+          (window as any).__lifelineActiveUtterance = utterance;
 
-      // Miękki przecinek daje przetwornikowi audio 50ms buforu na czysty start bez ucinania litery "P"
-      const safeSpeechText = ", " + speechText;
-      const utterance = new SpeechSynthesisUtterance(safeSpeechText);
-      activeUtteranceRef.current = utterance;
-      (window as any).__lifelineActiveUtterance = utterance;
+          utterance.lang = locale === "pl" ? "pl-PL" : "en-US";
+          utterance.rate = 1.0;
+          utterance.pitch = 1.0;
 
-      utterance.lang = locale === "pl" ? "pl-PL" : "en-US";
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
+          try {
+            const voices = window.speechSynthesis.getVoices();
+            const targetLang = locale === "pl" ? "pl" : "en";
+            const matchedVoice =
+              voices.find(
+                (v) =>
+                  v.lang.toLowerCase().startsWith(targetLang) &&
+                  (v.localService || v.default),
+              ) ||
+              voices.find((v) => v.lang.toLowerCase().startsWith(targetLang));
 
-      try {
-        const voices = window.speechSynthesis.getVoices();
-        const targetLang = locale === "pl" ? "pl" : "en";
-        const matchedVoice =
-          voices.find(
-            (v) =>
-              v.lang.toLowerCase().startsWith(targetLang) &&
-              (v.localService || v.default),
-          ) || voices.find((v) => v.lang.toLowerCase().startsWith(targetLang));
+            if (matchedVoice) {
+              utterance.voice = matchedVoice;
+            }
+          } catch {
+            // Ignoruj
+          }
 
-        if (matchedVoice) {
-          utterance.voice = matchedVoice;
-        }
-      } catch {
-        // Ignoruj
-      }
+          utterance.onstart = () => {
+            isSpeakingRef.current = true;
+          };
 
-      utterance.onstart = () => {
-        isSpeakingRef.current = true;
-      };
+          utterance.onend = () => {
+            if (activeUtteranceRef.current === utterance) {
+              isSpeakingRef.current = false;
+              activeUtteranceRef.current = null;
+              (window as any).__lifelineActiveUtterance = null;
+            }
+          };
 
-      utterance.onend = () => {
-        if (activeUtteranceRef.current === utterance) {
+          utterance.onerror = () => {
+            if (activeUtteranceRef.current === utterance) {
+              isSpeakingRef.current = false;
+              activeUtteranceRef.current = null;
+              (window as any).__lifelineActiveUtterance = null;
+            }
+          };
+
+          window.speechSynthesis.speak(utterance);
+        } catch {
           isSpeakingRef.current = false;
           activeUtteranceRef.current = null;
           (window as any).__lifelineActiveUtterance = null;
         }
-      };
-
-      utterance.onerror = () => {
-        if (activeUtteranceRef.current === utterance) {
-          isSpeakingRef.current = false;
-          activeUtteranceRef.current = null;
-          (window as any).__lifelineActiveUtterance = null;
-        }
-      };
-
-      try {
-        window.speechSynthesis.speak(utterance);
-      } catch {
-        isSpeakingRef.current = false;
-        activeUtteranceRef.current = null;
-        (window as any).__lifelineActiveUtterance = null;
-      }
+      }, 45);
     },
     [locale],
   );
@@ -265,7 +302,7 @@ export function EmergencyDashboard() {
     if (lastRawInstructionTextRef.current) {
       lastActionTimeRef.current = Date.now();
       speechStartTimeRef.current = 0;
-      speakInstruction(lastRawInstructionTextRef.current);
+      speakInstruction(lastRawInstructionTextRef.current, true);
     }
   }, [speakInstruction]);
 
@@ -383,29 +420,104 @@ export function EmergencyDashboard() {
     };
   }, [wakeLockActive, wakeLockSupported]);
 
+  // Odpytanie serwerowego AI gdy zapytanie nie pasuje do lokalnego katalogu
+  const queryAiGuidance = useCallback(
+    async (queryText: string) => {
+      if (isQueryingAiRef.current) {
+        return;
+      }
+
+      if (aiAbortControllerRef.current) {
+        aiAbortControllerRef.current.abort();
+      }
+
+      const controller = new AbortController();
+      aiAbortControllerRef.current = controller;
+      isQueryingAiRef.current = true;
+
+      setIsThinking(true);
+      setErrorMessage(null);
+
+      try {
+        const response = await fetch("/api/guidance", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            query: queryText,
+            locale,
+          }),
+          signal: controller.signal,
+        });
+
+        const data = await response.json().catch(() => null);
+
+        if (response.ok && data?.ok && data?.guidance) {
+          setSelected(null);
+          setMetronomeActive(false);
+          setAiGuidance(data.guidance);
+          setActiveTitleKey(null);
+          speakInstruction(data.guidance, true);
+        } else {
+          setErrorMessage(data?.message || t.voice_error);
+        }
+      } catch (err: any) {
+        if (err?.name === "AbortError") {
+          return;
+        }
+        console.error("Failed to query AI guidance:", err);
+        setErrorMessage(t.voice_error);
+      } finally {
+        isQueryingAiRef.current = false;
+        setIsThinking(false);
+      }
+    },
+    [locale, speakInstruction, t.voice_error],
+  );
+
   const handleVoiceCommand = useCallback(
     (transcript: string) => {
       const lower = transcript.toLowerCase().trim();
       if (!lower || lower.length < 3) return;
 
       const now = Date.now();
-
-      // Jeśli lektor aktualnie mówi, filtrujemy echo z własnego głośnika
-      if (isSpeakingRef.current) {
-        if (isSelfEcho(lower, lastSpokenNormalizedTextRef.current)) {
-          return;
-        }
-      }
+      const currentlySpeaking = isSpeakingRef.current;
 
       const result = analyzeRescueQuery(transcript, locale, t);
 
+      // JEŚLI NIE ROZPOZNANO W LOKALNYM KATALOGU -> ODPYTANIE SERWERA AI (z filtrem echa)
       if (result.type === "unknown") {
-        if (!isSpeakingRef.current) {
-          setLastUserQuery(transcript);
+        if (
+          currentlySpeaking &&
+          isSelfEcho(lower, lastSpokenNormalizedTextRef.current)
+        ) {
+          return;
         }
+
+        if (
+          lastProcessedTranscriptRef.current === lower &&
+          now - lastProcessedTimeRef.current < 2000
+        ) {
+          return;
+        }
+
+        lastProcessedTranscriptRef.current = lower;
+        lastProcessedTimeRef.current = now;
+        setLastUserQuery(transcript);
+
+        if (currentlySpeaking) {
+          try {
+            window.speechSynthesis.cancel();
+          } catch {}
+          isSpeakingRef.current = false;
+        }
+        queryAiGuidance(transcript);
         return;
       }
 
+      // JEŚLI ROZPOZNANO KONKRETNĄ PROCEDURĘ RATUNKOWĄ (CPR, CHOKING, UNCONSCIOUS itp.):
+      // Nigdy nie blokujemy jej filtrem echa! Komenda ratunkowa ma zawsze 100% priorytet!
       const currentActionKey =
         result.command ||
         result.protocolId ||
@@ -419,31 +531,37 @@ export function EmergencyDashboard() {
         (currentActionKey === "start_cpr" &&
           lastActionKeyRef.current === "cpr");
 
-      // Blokada zapętlania tej samej procedury
-      if (isSameAction && isSpeakingRef.current) {
-        return;
-      }
-
+      // Blokada zapętlania dokładnie tej samej procedury, jeśli trwa już jej odtwarzanie
       const timeSinceLastAction = now - lastActionTimeRef.current;
-      if (isSameAction && timeSinceLastAction < 2500) {
+      if (isSameAction && currentlySpeaking && timeSinceLastAction < 2500) {
         return;
       }
 
-      // VOICE BARGE-IN: Użytkownik wydał nowe polecenie ratunkowe podczas mowy lektora -> natychmiast uciszamy lektora!
-      if (isSpeakingRef.current && !isSameAction) {
+      // VOICE BARGE-IN: Nowa procedura ratunkowa w trakcie trwania mowy poprzedniej -> NATYCHMIAST PRZERWIJ LEKTORA!
+      const isBargeIn = currentlySpeaking && !isSameAction;
+      if (currentlySpeaking) {
         try {
           window.speechSynthesis.cancel();
         } catch {
           // Ignoruj
         }
         isSpeakingRef.current = false;
+        activeUtteranceRef.current = null;
       }
 
-      setLastUserQuery(transcript);
-      setErrorMessage(null);
+      if (aiAbortControllerRef.current) {
+        aiAbortControllerRef.current.abort();
+        aiAbortControllerRef.current = null;
+      }
+      isQueryingAiRef.current = false;
+      setIsThinking(false);
 
+      lastProcessedTranscriptRef.current = lower;
+      lastProcessedTimeRef.current = now;
       lastActionKeyRef.current = currentActionKey;
       lastActionTimeRef.current = now;
+      setLastUserQuery(transcript);
+      setErrorMessage(null);
 
       if (result.type === "command") {
         if (result.command === "start_cpr") {
@@ -451,12 +569,12 @@ export function EmergencyDashboard() {
           setAiGuidance(null);
           setActiveTitleKey("title_cpr");
           setMetronomeActive(true);
-          speakInstruction(result.spokenText);
+          speakInstruction(result.spokenText, isBargeIn);
           return;
         }
         if (result.command === "stop_metronome") {
           setMetronomeActive(false);
-          speakInstruction(result.spokenText);
+          speakInstruction(result.spokenText, isBargeIn);
           return;
         }
         if (result.command === "toggle_language") {
@@ -474,7 +592,7 @@ export function EmergencyDashboard() {
         } else {
           setMetronomeActive(false);
         }
-        speakInstruction(result.spokenText);
+        speakInstruction(result.spokenText, isBargeIn);
         return;
       }
 
@@ -483,11 +601,18 @@ export function EmergencyDashboard() {
         setMetronomeActive(false);
         setAiGuidance(result.displayText);
         setActiveTitleKey(result.titleKey || null);
-        speakInstruction(result.spokenText);
+        speakInstruction(result.spokenText, isBargeIn);
         return;
       }
     },
-    [isSelfEcho, locale, speakInstruction, t, toggleLocaleFromProvider],
+    [
+      isSelfEcho,
+      locale,
+      queryAiGuidance,
+      speakInstruction,
+      t,
+      toggleLocaleFromProvider,
+    ],
   );
 
   useEffect(() => {
@@ -512,7 +637,7 @@ export function EmergencyDashboard() {
 
     recognition.onresult = (event: any) => {
       let finalTranscript = "";
-      let interimTranscript = "";
+      let currentTranscript = "";
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const item = event.results[i];
@@ -521,59 +646,52 @@ export function EmergencyDashboard() {
           if (item.isFinal) {
             finalTranscript += text + " ";
           } else {
-            interimTranscript = text;
+            currentTranscript = text;
           }
         }
       }
 
-      const latestCandidate =
-        finalTranscript.trim() || interimTranscript.trim();
-      if (!latestCandidate) return;
+      const activeText = finalTranscript.trim() || currentTranscript.trim();
+      if (!activeText) return;
 
-      // Zawsze na bieżąco prezentujemy pełne zdanie w pasku
-      if (!isSpeakingRef.current) {
-        setLastUserQuery(latestCandidate);
+      // Zawsze na bieżąco pokazujemy tekst w wizualizerze
+      setLastUserQuery(activeText);
+
+      // Błyskawiczny Barge-In na komendy ratunkowe i procedury (nie czekamy na pauzę)
+      const quickLower = activeText.toLowerCase().trim();
+      const isUrgent =
+        ["stop", "pauza", "pause", "rko", "cpr"].includes(quickLower) ||
+        quickLower.includes("przytomn") ||
+        quickLower.includes("nie oddycha") ||
+        quickLower.includes("zemdla");
+
+      if (isUrgent) {
+        if (silenceTimerRef.current) {
+          clearTimeout(silenceTimerRef.current);
+          silenceTimerRef.current = null;
+        }
+        handleVoiceCommandRef.current(activeText);
+        return;
       }
 
-      // Finał frazy -> wykonaj natychmiast
+      // Jeśli przeglądarka oznaczyła frazę jako ostateczną (isFinal) -> wykonaj od razu
       if (finalTranscript.trim()) {
-        if (interimDebounceRef.current) {
-          clearTimeout(interimDebounceRef.current);
-          interimDebounceRef.current = null;
+        if (silenceTimerRef.current) {
+          clearTimeout(silenceTimerRef.current);
+          silenceTimerRef.current = null;
         }
         handleVoiceCommandRef.current(finalTranscript.trim());
         return;
       }
 
-      // Natychmiastowe komendy ratunkowe (0ms)
-      const quickLower = latestCandidate.toLowerCase().trim();
-      const isUrgent = [
-        "stop",
-        "pauza",
-        "pause",
-        "rko",
-        "cpr",
-        "pomoc",
-        "help",
-      ].includes(quickLower);
-
-      if (isUrgent) {
-        if (interimDebounceRef.current) {
-          clearTimeout(interimDebounceRef.current);
-          interimDebounceRef.current = null;
-        }
-        handleVoiceCommandRef.current(latestCandidate);
-        return;
+      // Dla zdań wielowyrazowych czekamy na 450ms ciszy
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
       }
 
-      // Bufor 380ms pozwalający dokończyć wielowyrazowe zdanie
-      if (interimDebounceRef.current) {
-        clearTimeout(interimDebounceRef.current);
-      }
-
-      interimDebounceRef.current = setTimeout(() => {
-        handleVoiceCommandRef.current(latestCandidate);
-      }, 380);
+      silenceTimerRef.current = setTimeout(() => {
+        handleVoiceCommandRef.current(activeText);
+      }, 450);
     };
 
     recognition.onerror = (event: any) => {
@@ -587,13 +705,13 @@ export function EmergencyDashboard() {
     };
 
     recognition.onend = () => {
-      // HANDS-FREE: Dopóki użytkownik sam nie wyłączy nasłuchu przyciskiem, smartfon czuwa ciągle w tle
+      // HANDS-FREE: Smartfon czuwa ciągle w tle
       if (userWantsListeningRef.current) {
         try {
           recognition.start();
           setIsListening(true);
         } catch {
-          // Ignoruj błędy restartu
+          // Ignoruj
         }
       } else {
         setIsListening(false);
@@ -603,8 +721,8 @@ export function EmergencyDashboard() {
     recognitionRef.current = recognition;
 
     return () => {
-      if (interimDebounceRef.current) {
-        clearTimeout(interimDebounceRef.current);
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
       }
       try {
         recognition.stop();
@@ -625,13 +743,17 @@ export function EmergencyDashboard() {
     if (userWantsListeningRef.current) {
       userWantsListeningRef.current = false;
       setIsListening(false);
-      if (interimDebounceRef.current) {
-        clearTimeout(interimDebounceRef.current);
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
       }
       try {
         recognitionRef.current.stop();
       } catch {
         // Ignoruj
+      }
+      if (speakTimeoutRef.current) {
+        clearTimeout(speakTimeoutRef.current);
+        speakTimeoutRef.current = null;
       }
       if (typeof window !== "undefined" && "speechSynthesis" in window) {
         window.speechSynthesis.cancel();
@@ -665,6 +787,10 @@ export function EmergencyDashboard() {
       setAiGuidance(null);
       setActiveTitleKey(null);
       setMetronomeActive(false);
+      if (speakTimeoutRef.current) {
+        clearTimeout(speakTimeoutRef.current);
+        speakTimeoutRef.current = null;
+      }
       if (typeof window !== "undefined" && "speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
@@ -688,7 +814,7 @@ export function EmergencyDashboard() {
       if (proto) {
         const spokenKey =
           id === "cpr" ? "cpr_full_guidance_spoken" : `${id}_desc_spoken`;
-        speakInstruction(t[spokenKey] || proto.instruction);
+        speakInstruction(t[spokenKey] || proto.instruction, true);
       }
     }
   };
@@ -704,6 +830,7 @@ export function EmergencyDashboard() {
       setMetronomeActive(true);
       speakInstruction(
         t.cpr_full_guidance_spoken || t.cpr_full_guidance || t.cpr_desc,
+        true,
       );
       return;
     }
@@ -755,7 +882,6 @@ export function EmergencyDashboard() {
             <div className="flex flex-col gap-4 sm:gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-4xl">
                 <div className="mb-2 sm:mb-3 flex flex-wrap items-center gap-2 sm:gap-3">
-                  {/* SEMANTYCZNY BADGE STATUSU ZAMIAST H2 (ELIMINACJA BŁĘDU H2 PRZED H1 W SEO) */}
                   <span
                     role="status"
                     aria-live="polite"
@@ -774,7 +900,6 @@ export function EmergencyDashboard() {
                   </Button>
                 </div>
 
-                {/* PIERWSZY I GŁÓWNY NAGŁÓWEK STRONY H1 */}
                 <h1 className="font-mono text-xl sm:text-3xl lg:text-5xl font-black uppercase tracking-tight text-foreground leading-[1.15] break-words text-pretty">
                   {preventOrphans(currentInstruction)}
                 </h1>
@@ -784,7 +909,6 @@ export function EmergencyDashboard() {
         </section>
 
         <section aria-labelledby="protocols-heading" className="w-full">
-          {/* PRAWIDŁOWY PODTYTUŁ SEKCJI H2 (UNIEMOŻLIWIA POWTÓRZENIE TREŚCI H1) */}
           <h2 id="protocols-heading" className="sr-only">
             {t.protocol_cpr
               ? `${t.protocol_cpr}, ${t.protocol_choking}, ${t.protocol_bleeding}`

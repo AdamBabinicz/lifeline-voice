@@ -202,13 +202,14 @@ export function matchRescueGuidanceKey(
       return "guidance_fall_head_trauma";
     }
 
-    // 8. Świadoma prośba o ogólną pomoc
+    // 8. Świadoma prośba o ogólną pomoc (tylko czyste słowa ratunku, nie złożone pytania)
     if (
-      q.includes("pomoc") ||
-      q.includes("pomóż") ||
-      q.includes("pomoz") ||
-      q.includes("ratunk") ||
-      q.includes("pogotowi") ||
+      q === "pomoc" ||
+      q === "pomocy" ||
+      q === "pomóż" ||
+      q === "pomoz" ||
+      q === "ratunku" ||
+      q === "pogotowie" ||
       q.includes("zagrożenie życia")
     ) {
       return "guidance_general_emergency";
@@ -298,10 +299,10 @@ export function matchRescueGuidanceKey(
     }
 
     if (
-      q.includes("help") ||
-      q.includes("emergency") ||
-      q.includes("save") ||
-      q.includes("ambulance")
+      q === "help" ||
+      q === "emergency" ||
+      q === "save me" ||
+      q === "ambulance"
     ) {
       return "guidance_general_emergency";
     }
@@ -441,21 +442,25 @@ export function analyzeRescueQuery(
     };
   }
 
-  // 4. Utrata przytomności
+  // 4. Utrata przytomności (pełne uwzględnienie odmian: stracił przytomność, nieprzytomny, omdlenie itp.)
   const isUnconscious =
     locale === "pl"
-      ? query.includes("nieprzytomn") ||
-        query.includes("przytomnoś") ||
-        query.includes("przytomnos") ||
+      ? query.includes("przytomn") ||
         query.includes("zemdla") ||
         query.includes("omdlen") ||
-        query.includes("nie reaguje")
+        query.includes("omdlał") ||
+        query.includes("omdlal") ||
+        query.includes("nie reaguje") ||
+        query.includes("bez kontaktu") ||
+        query.includes("stracił kontakt") ||
+        query.includes("stracil kontakt")
       : query.includes("unconscious") ||
         query.includes("unresponsive") ||
         query.includes("fainted") ||
         query.includes("passed out") ||
         query.includes("collapse") ||
-        query.includes("consciousness");
+        query.includes("consciousness") ||
+        query.includes("lost consciousness");
 
   if (isUnconscious) {
     return {
